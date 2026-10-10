@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "routing": "manual",
+  "note": "Auditable assignments only; no extension consumes this file in this setup.",
+  "assignments": {
+    "pm-agent": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "high"
+    },
+    "team-lead": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "high"
+    },
+    "pr-checkpoint": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "high"
+    },
+    "product-designer": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "high"
+    },
+    "pm": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "high"
+    },
+    "desktop-architect": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "high"
+    },
+    "pi-integration-specialist": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "high"
+    },
+    "domain-modeler": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "high"
+    },
+    "api-developer": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "high"
+    },
+    "accessibility-specialist": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "high"
+    },
+    "shared-component-architect": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "high"
+    },
+    "frontend-builder": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "medium"
+    },
+    "backend-builder": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "medium"
+    },
+    "conversation-builder": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "medium"
+    },
+    "pi-integration-builder": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "medium"
+    },
+    "git-workspace-builder": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "medium"
+    },
+    "persistence-recovery-builder": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "medium"
+    },
+    "markdown-editor-builder": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "medium"
+    },
+    "windows-release-engineer": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "medium"
+    },
+    "test-writer": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "high"
+    },
+    "security-data-safety-reviewer": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "high"
+    },
+    "destroyer": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "high"
+    },
+    "review-agent": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "high"
+    },
+    "tester": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "high"
+    },
+    "git-committer": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "medium"
+    },
+    "acceptance-coordinator": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "high"
+    }
+  }
+}
