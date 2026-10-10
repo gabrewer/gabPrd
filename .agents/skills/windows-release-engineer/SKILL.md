@@ -17,6 +17,8 @@ Role instructions are behavioral boundaries, not an OS sandbox or native isolate
 
 Read selected architecture/packaging decisions, actual build manifests, prerequisite policy, and approved release task.
 
+For approved Electron packaging/install tasks, read sections 1, 6 and 8 of `.agents/skills/desktop-architect/references/electron-development.md` (repository-root reference); do not import unapproved updater, toolchain or release defaults.
+
 ## Responsibilities and handoff
 
 Establish reproducible build/package commands and safe installer/update behavior where approved. Validate Pi/Git/provider prerequisites with understandable diagnostics and clean-machine launch evidence.

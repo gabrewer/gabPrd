@@ -31,6 +31,6 @@ Audit dependency completeness, runtime-boundary integration coverage, acceptance
 
 ## Model and tools
 
-Assignment: `openai-codex/gpt-6.1-sol`, thinking `high`. Coordinator must verify the active model/level or record a human-approved deviation; no silent fallback.
+Assignment: `openai-codex/gpt-6-astra`, thinking `high`. Coordinator must verify the active model/level or record a human-approved deviation; no silent fallback.
 
 Read/write/edit/find/grep/ls/bash within assigned ownership. Never modify task-owned tests; route test changes through test-writer.

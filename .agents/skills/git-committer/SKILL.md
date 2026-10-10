@@ -31,6 +31,6 @@ Apply canonical 8 commits OR 30 files advisory, 15 OR 60 strong thresholds. Prov
 
 ## Model and tools
 
-Assignment: `openai-codex/gpt-6.1-sol`, thinking `medium`. Coordinator must verify the active model/level or record a human-approved deviation; no silent fallback.
+Assignment: `openai-codex/gpt-6-luna`, thinking `medium`. Coordinator must verify the active model/level or record a human-approved deviation; no silent fallback.
 
 Read/find/grep/ls/bash for explicit approved Git operations; no production edits.

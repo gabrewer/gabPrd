@@ -17,6 +17,8 @@ Role instructions are behavioral boundaries, not an OS sandbox or native isolate
 
 Inspect real repository inventory and official candidate-framework documentation. Compare accessibility, embedded conversation/editor support, Pi hosting, Windows deployment, testability, and maintenance.
 
+For approved Electron architecture/bootstrap work, read `.agents/skills/desktop-architect/references/electron-development.md` (repository-root reference) before making recommendations; it is guidance, not implementation approval.
+
 ## Responsibilities and handoff
 
 Produce a proportional architecture decision with viable alternatives, evidence, risks, and a recommended UI/process/packaging approach. Hand approved boundaries to domain-modeler, api-developer, builders, and windows-release-engineer.

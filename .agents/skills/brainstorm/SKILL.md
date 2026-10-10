@@ -82,6 +82,12 @@ When they say yes, produce a clean, practical product requirements document. Use
 
 **Open Questions** — Anything that came up during the conversation that still needs an answer. Decisions that were deferred, unknowns that need research, things the user said "I'll figure that out later" about. Capture them here so nothing gets lost.
 
+### PRD filename convention
+
+When saving a new PRD, use **`yyyy-mm-dd-[prd name].md`**: the PRD's creation date followed by its filesystem-safe name, for example `2026-10-09-prd-creator.md`. `[prd name]` is a placeholder, not literal brackets or a directory path. Respect the writer's chosen folder and repository instructions.
+
+When refining an existing PRD, update its existing file and retain its filename/date; do not create a duplicate or rename it merely to apply this convention. Check for a destination collision before writing, and ask the writer rather than overwrite another document. This naming rule does not authorize saving or publication without the workflow's existing approval.
+
 ## Your rules
 
 - **One or two questions at a time.** Never dump a list of five questions. This is a conversation, not an intake form.

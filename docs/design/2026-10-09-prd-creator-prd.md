@@ -1,7 +1,8 @@
 # PRD Creator
 
-Status: Initial product contract; implementation choices remain open.
+Status: Product refinement; Electron selected, remaining implementation choices and execution approval pending.
 Created: 2026-10-09
+Planning record: https://github.com/gabrewer/gabPrd/issues/8
 
 ## 1. Product Name & One-Liner
 
@@ -13,7 +14,7 @@ Writing a PRD with Pi currently requires navigating a repository, arranging a br
 
 The primary user is a non-coder who can describe a product idea and answer questions but should not need to understand Git commands, worktrees, or Pi's terminal interface.
 
-An existing local clone is a prerequisite. Repository cloning, Git credentials, and initial Pi/provider setup are not yet defined as app-managed capabilities. The app must explain missing prerequisites without claiming setup succeeded.
+An existing local clone and installed, configured **Pi, Git, and GitHub CLI (`gh`)** are prerequisites. The writer approved assuming these tools and their existing provider/remote authentication are ready before using the app, and requiring an existing `brainstorm` skill available through Pi's configured resources. Version/availability checks and safe diagnostics still apply: configuration can expire or become unavailable. The first release does not install tools, clone repositories, perform login, copy credentials, or silently change tool configuration. Product publication uses Git and still creates no pull request; assuming `gh` is available does not expand publication scope.
 
 ## 3. Goals & Success Measures
 
@@ -40,7 +41,7 @@ Use plain-language validation and error messages. Do not silently choose a diffe
 
 1. The writer selects **New PRD** and enters their initial brainstorm text.
 2. The app fetches `origin/main` and creates a unique branch and isolated Git worktree based on that fetched revision.
-3. The app starts the selected repository's Pi brainstorm skill in that PRD's workspace, supplying the initial text.
+3. After validating availability of the required configured `brainstorm` skill, the app starts it in that PRD's workspace with the selected repository's instructions/context, supplying the initial text. Missing skill availability produces a clear prerequisite error, not generic-chat fallback or automatic installation.
 4. The writer stays in the app; branch creation and Pi startup appear as understandable progress states.
 
 The workspace must not change the original checkout's branch or overwrite its uncommitted work. If fetching or workspace creation fails, show the failure and a way to try again; do not silently start from an outdated base.
@@ -60,7 +61,7 @@ The workspace must not change the original checkout's branch or overwrite its un
 - Keep the conversation available for review requests and further questions.
 - When the writer asks Pi to change the PRD, Pi applies the requested edits directly; there is no mandatory proposal-acceptance step for each edit.
 - Refresh the displayed document after Pi changes it.
-- Manual edits and Pi edits must operate on the same document without silently losing unsaved writer changes. The exact interaction while Pi is editing remains a design decision.
+- Manual edits and Pi edits operate on the same document. Use explicit Save/Ctrl+S and a visible unsaved indicator, save manual changes before Pi revisions, and keep source editing read-only while Pi revises. Include manual undo/redo and reject stale writes without silently losing changes.
 - Producing a draft does not automatically publish it.
 
 Suggested layout: conversation on one side and document editor/preview on the other. This is a design direction, not a fixed layout requirement.
@@ -75,14 +76,21 @@ Suggested layout: conversation on one side and document editor/preview on the ot
 
 ### P0 — Approve and publish
 
-1. The writer reviews the current draft and explicitly selects **Approve & Publish**.
-2. The app saves the current document and commits that PRD on its dedicated branch.
+1. The writer saves any manual changes, reviews that saved revision, and explicitly selects **Approve & Publish**.
+2. The app validates that the saved revision still exactly matches the approved revision and commits only that PRD on its dedicated branch. Later edits invalidate approval; do not silently save and publish different content under an earlier approval.
 3. The app pushes the branch to `origin` and reports success only after the push succeeds.
 4. The app does not open a pull request or merge anything.
 
 Commit only the approved PRD, not unrelated repository changes, conversation records, credentials, or local app state. If Pi modifies other files, exclude them from publication and explain that they are not part of the approved document.
 
 If a commit succeeds but pushing fails, preserve the local result and report that it has not yet been published. Never overwrite remote history automatically to resolve a failure.
+
+### P0 — Revise after publication
+
+- The writer can reopen a published PRD and make further manual or Pi revisions in v1, preserving its validated repository/workspace/session association.
+- A later local edit is an unpublished revision, not an automatic update of the remote document. Preserve the recorded last successful publication separately from the current draft state.
+- Each later publication requires fresh explicit approval of the exact saved revision and the same scoped commit/push behavior; no automatic publication, merging, or force-push is introduced.
+- Exact branch/remote reconciliation, missing-worktree recovery, and interrupted publication behavior remain contract/verification work.
 
 ## 5. Non-Goals
 
@@ -118,13 +126,13 @@ This is a local desktop product, not a UI-only mockup. It needs real filesystem,
 - Each PRD's identity/display name, repository association, worktree location, branch name, Markdown path, and Pi conversation/session reference.
 - Enough information to reopen unfinished work and accurately distinguish local work from successful publication.
 
-The Markdown file is the document being edited and committed. Conversation storage must support resuming Pi, not merely displaying a disconnected transcript. Persistence format and storage ownership are open technical decisions; do not commit local session state to the selected repository.
+The Markdown file is the document being edited and committed. Conversation storage must support resuming Pi, not merely displaying a disconnected transcript. **SQLite is selected for local app metadata**; it is an embedded library bundled with the application, not a database server or separate user installation. The `better-sqlite3` driver and local-service ownership are selected; SQLite metadata and Pi-managed resumable session JSONL live under gabPrd's per-user app-data folder, outside the repository. Exact filenames/schema/migrations and recovery contracts remain to be defined. Do not commit the database or local session state to the selected repository.
 
 ### External contracts
 
 - **Git:** fetch `origin/main`; create a unique branch/worktree; commit the approved file; push that branch to `origin`.
 - **Pi:** execute the configured brainstorm skill in the correct workspace, exchange interactive messages, locate the produced document, support document review/editing, and resume the session.
-- **Repository conventions:** use the selected repository's instructions and brainstorm workflow. The app must not assume every repository uses Lessi-specific paths or policies.
+- **Repository conventions:** use the selected repository's instructions and brainstorm workflow. Follow its existing PRD/design-document location convention; when no convention exists, default to `docs/design/` inside the PRD worktree. The app must not assume every repository uses Lessi-specific paths or policies. New PRDs use `yyyy-mm-dd-[prd name].md`, with the creation date and filesystem-safe PRD name. Existing PRDs retain their filenames on revision. Ambiguous folders, name validation/collisions, and path containment require contract/UI design, not arbitrary overwriting.
 
 ### Initial Contract Impact Check
 
@@ -132,14 +140,14 @@ The Markdown file is the document being edited and committed. Conversation stora
 |---|---|
 | Accessibility criteria | Yes; keyboard and Windows screen-reader validation required. |
 | UI only | No; local persistence, Git, filesystem, and Pi integration required. |
-| API request/response changes | No product API specified; Pi integration contract still to be selected and inspected. |
-| Validation/auth/ownership | Validate selected repository and PRD workspace/file association. Git and Pi/provider credentials use existing configured access; credential setup is unresolved. |
+| API request/response changes | Typed desktop/local-service/IPC contracts are required but do not exist yet. Pi SDK in an Electron utility process is selected; message/resource/tool contracts and packaged runtime validation remain pending. |
+| Validation/auth/ownership | Validate selected repository and PRD workspace/file/session association. Pi, Git, and `gh` are assumed installed/configured; use existing authentication without managing credentials. Test unavailable, expired, and insufficient access with safe errors and no unintended mutation. |
 | Existing auth or ownership boundaries | Git remote/provider access and local filesystem permissions are invoked. Test permission/auth failures and exclusion of unrelated files. |
-| Cross-service command authority | No separate service-authoritative product boundary proposed. |
+| Cross-service command authority | Local application services enforce write-side linkage/revision validation and publication authority; renderer requests are not authority. No remote application backend or cross-product service boundary is proposed. |
 | Public/durable error paths | Yes; show safe actionable messages, not raw credentials, provider payloads, or stack traces. Test exception-bearing boundaries with sentinel secrets. |
 | Potentially growing reads | PRD list and conversation history can grow. Choose bounded loading during technical refinement. |
 | Cross-entity linkage | PRD records link repository, worktree, branch, file, and session; validate associations before editing or publication. |
-| Persistence | Yes; settings, resumable PRD workspace associations, and conversations. |
+| Persistence | Yes; SQLite for settings and PRD workspace/operation/publication metadata; resumable Pi conversation storage remains distinct. The bundled `better-sqlite3` driver and per-user app-data ownership are selected; schema/migrations, linkage validation, and restart/recovery tests are required. |
 | Integration tests | Yes; Git, Pi session lifecycle, document edits, restart/resume, and publication failures. |
 | Runtime validation | Windows app runtime required. No Aspire dependency established. |
 | Distributed workflow impact | Yes; Pi/provider operations and Git fetch/push cross process/network boundaries. |
@@ -159,22 +167,112 @@ These requirements cover observed workflow boundaries, not a prescribed recovery
 
 ## 9. Technical Considerations
 
+### Approved application stack and prerequisites
+
+The writer selected **Electron**, then approved **strict TypeScript, React, and the Pi TypeScript SDK hosted in an Electron utility process**. Pi, Git, and `gh` are assumed already installed and configured, including their existing authentication. The writer also requires an existing **`brainstorm` skill** to be available through Pi's configured resources. These architecture/prerequisite decisions do not approve implementation, runtime probes, package installation, commits, or development publication.
+
+Electron is a fit for the product's conversation-and-document UI. Its official [process model](https://www.electronjs.org/docs/latest/tutorial/process-model) supports a web renderer and a separate Node-capable utility process. Follow the official [security guidance](https://www.electronjs.org/docs/latest/tutorial/security): sandbox the renderer, enable context isolation, disable renderer Node integration, validate IPC senders and arguments, and expose narrow application commands rather than arbitrary filesystem, shell, or credential access. A Pi subprocess or working directory is not an OS sandbox.
+
+Process direction: React renderer → narrow validated preload/IPC bridge → local application services in the main process → Pi SDK utility process. Git/filesystem/publication authority must not be exposed as arbitrary renderer operations. Define the exact service/tool handoff and edit/publication synchronization through typed contracts before builders.
+
+The SDK is an application dependency that must be pinned and packaged; do not resolve executable SDK code from an arbitrary global CLI installation. Reuse existing Pi configuration/authentication through the supported SDK facilities, without presenting credentials to the renderer. Prove compatibility with Electron's bundled Node runtime and real Pi configuration/session/resource loading. Availability checks are diagnostics, not an installation or login wizard.
+
+The `brainstorm` skill is a prerequisite, not an app-bundled fallback. Validate that it is available before starting a brainstorm; if missing or unreadable, show a clear actionable message and do not silently substitute generic chat, install/copy a skill, or alter existing instructions. Preserve available user/repository skill content and ownership. Exact configured-resource discovery/precedence, skill identity/path, SDK invocation, and missing-skill rejection/no-mutation behavior still need version-aware contracts and integration evidence. This does not resolve the deferred executable-extension/tool policy.
+
+### Approved metadata persistence
+
+The writer chose to keep **SQLite** after comparing it with typed JSON records and clarifying deployment. SQLite is for local app metadata, including settings, PRD workspace/session associations, and operation/publication state. It does not replace the Markdown document or resumable Pi conversation. Bundle the SQLite library with the application; no separate database installer, server, or service is required for users.
+
+The writer also approved **`better-sqlite3`** as the bundled driver, owned by local services rather than the renderer. Electron ABI rebuilding/unpacking and packaged Windows loading/restart tests are required; approval is not packaged compatibility evidence.
+
+A SQLite transaction does not atomically cover Git, document files, and Pi sessions. Typed state, validated resource linkage, and explicit recovery/reconciliation remain necessary. The per-user app-data storage arrangement below is approved. Exact filenames/schema, migrations, recovery, and native-module packaging remain pending design or runtime verification.
+
+### Approved build and installer tooling
+
+The writer approved **Electron Forge + Webpack + npm**. Use project-local pinned dependencies and a lockfile. Package the utility-process entry and Pi runtime assets explicitly; development startup is not packaged execution evidence. An approved bootstrap must establish actual build/test/package commands.
+
+After comparing traditional MSI and modern MSIX alternatives, the writer accepted **Forge Squirrel.Windows** for the proposed per-user setup executable. Signing/trust, exact versions/configuration, and real Windows install/upgrade/uninstall behavior remain release decisions and evidence gates. Preserve documents, metadata, and completed conversations through installer operations; data-retention behavior requires an explicit contract. Installer selection does not approve an automatic updater, distribution/publishing, or implementation.
+
+### Approved Markdown editor and preview
+
+The writer selected **CodeMirror 6** for Markdown source editing and **`react-markdown` + `remark-gfm`** for rendered preview. Wrap them in one app-owned React document component rather than expose separate editing and preview systems to the writer. Source editing and rendered preview are two views of one document, not independently saved documents.
+
+The preview supports GitHub-flavored Markdown, including tables, task lists, and strikethrough, without raw HTML execution. Preserve safe URL handling and review plugins/custom renderers and link/image behavior; selecting a rendering library does not settle external-resource policies.
+
+Integration requirements: both views consume the same current text/revision; the preview is read-only and never rewrites or saves Markdown. Local services own file saving and revision validation. Pi or external updates must not replace unsaved manual content silently. Validate the selected editor Markdown configuration against the preview's supported dialect with shared fixtures for headings, lists, tables, task lists, code, links, escaping, and unsafe content. The editing/publication policy below is approved; exact lifecycle, conflict, and recovery contracts still require design and verification.
+
+Keep Tab available for focus navigation. Keyboard/screen-reader, 200% scaling, reduced-motion, editing/undo, and source/preview synchronization evidence must be obtained in the real Windows app. Selecting CodeMirror does not waive those gates.
+
+### Approved editing and publication policy
+
+The writer approved:
+
+- Explicit **Save / Ctrl+S**, with a visible unsaved-changes indicator.
+- Save manual changes before starting a Pi revision; do not discard unsaved work to start it.
+- Temporarily keep source editing read-only while Pi revises the document.
+- Include undo/redo for manual editing in v1.
+- Publish only the exact saved revision explicitly approved by the writer. Later manual, Pi, or external edits invalidate approval and require fresh approval before publication.
+
+Local services must enforce revision checks and serialized mutations, reject stale writes without overwriting current content, and prevent publication while edits can still occur. A UI read-only state is not sufficient authority. Cancellation/completion must reconcile document state and confirm no remaining mutation before editing resumes. Exact operation/approval tokens, undo-history handling across Pi replacements, external-edit conflict behavior, crash recovery, and error contracts still require domain/contract design and automated integration evidence.
+
+### Approved document and session storage
+
+The writer approved this separation:
+
+- **SQLite metadata:** local-service-owned database in gabPrd's per-user app-data directory, using Electron's user-data location, outside the selected repository.
+- **Resumable Pi sessions:** Pi-managed persistent session JSONL in the same app-owned per-user data area, outside the repository. Use supported SDK session persistence rather than a replacement display-only transcript, so reopening restores actual conversation context.
+- **Markdown PRD:** document content remains in its isolated Git worktree.
+- **Publication:** includes only the exact approved PRD; conversations and application metadata are never included in the product publication.
+
+Record the exact session identity/path and repository/worktree/branch/document association, validating linkage before saving, prompting, resuming, or publishing. Preserve existing external Pi configuration/authentication and sessions; this approval does not authorize relocating them or copying credentials. Exact app-data filenames/subdirectories, schema/migrations, crash reconciliation, backup/retention behavior, and installer interaction remain contract/verification work. Restart/resume, corruption/no-silent-reset, concurrent edits, no-mutation rejection, and scoped Git publication need automated integration evidence.
+
+Installer packaging, exact SQLite/session storage/schema/recovery contracts, editor/preview configuration and external-resource policies, dependency versions, detailed edit/conflict/recovery contracts, and build/test commands remain pending design, approval where consequential, or runtime verification. Selected stack/tooling, storage arrangement, and editing/publication policy do not authorize implementation.
+
+### Approved PRD location and later revisions
+
+The writer approved following the selected repository's existing PRD/design-document convention, with **`docs/design/`** as the fallback when none exists. The Markdown stays inside its isolated worktree. This is the application's generated-PRD default, not a relocation of this existing product contract or other files. Both **brainstorm** and **product-designer** must use **`yyyy-mm-dd-[prd name].md`** when creating a new PRD. Use the PRD's creation date and a filesystem-safe PRD name, for example `2026-10-09-prd-creator.md`; brackets denote a placeholder, not literal characters or a directory path. Revisions keep the existing filename/date, including this product contract's current path. Do not rename existing documents automatically or overwrite a different PRD on collision. Resolve ambiguous folders explicitly and validate path containment; name normalization, date-source validation, and collision handling remain contract work.
+
+Published PRDs remain revisable in v1. Record the last verified remote publication separately from the current local draft; any new edit invalidates current publication approval but does not erase past publication history. Each later publication requires fresh explicit approval of the exact saved revision. Detailed state/remote-conflict/recovery contracts remain unimplemented and unverified.
+
+### Proposed first bootstrap boundary — not approved or implementation-ready
+
+The first proposed slice establishes the real application/build/test surface before product workflow builders:
+
+- Minimal Electron + strict TypeScript + React shell, sandboxed renderer, narrow validated preload/IPC, and a packaged utility-process entry.
+- Pinned project dependencies/lockfile using npm, with the actual source layout and reproducible type-check/test/build/package commands established and documented by the approved bootstrap rather than assumed here.
+- Real packaged Windows startup plus Pi SDK import/asset compatibility and `better-sqlite3` load/temporary-database round-trip evidence. The SQLite check uses an isolated test data directory, not existing records.
+- Initial Windows keyboard/focus, screen-reader, 200% scaling, and reduced-motion evidence for the shell; unavailable required evidence is NOT CHECKED and blocking unless explicitly accepted.
+
+Exclude model/provider requests, automatic skill/extension execution, real conversation sessions, selected-repository/worktree mutations, PRD editing/publication, existing app-data migration, installer deployment, and release distribution from this proposed slice. Exclusion from bootstrap does not select the deferred product tool/extension policy. No application files/commands exist yet; dependency versions/test tooling, typed bootstrap command/error contracts, exact task-owned outputs, verification procedure, review boundary, and human execution approval must be settled before dispatch. Squirrel installer validation and full runtime/session/edit/publication testing remain required later, not satisfied by this limited bootstrap.
+
+### Deferred Pi tool and extension policy
+
+The writer asked to skip the discussion of additional Pi restrictions for now, citing Git for source management. The proposed draft-only write tools, prohibition on arbitrary shell/Git tools, and prohibition on automatic third-party executable-extension loading are **not approved** and must not be presented as selected defaults. This is a deferred decision, not an approved unrestricted tool configuration.
+
+Continue other planning without reopening this discussion now. The approved save/manual-edit protections, exact-revision publication approval, preservation of unrelated files/conversations, credential safety, and narrow renderer IPC remain unchanged. Git can recover committed tracked content but does not protect untracked files, external paths, credentials, or remote mutations; no OS-sandbox guarantee is inferred. Exact Pi capability/configuration compatibility must be made explicit before affected mutating integration work is declared implementation-ready.
+
 ### Open implementation choices
 
-- Windows UI framework and application packaging.
-- Hosting Pi through its SDK versus communicating with Pi through RPC. The user permits either; neither has been selected or validated.
-- Pi/provider installation and authentication prerequisites, including how a non-coder gets help if setup is missing.
-- How the app discovers and invokes the brainstorm skill in the selected repository.
+- Refine exact SQLite/session filenames, schema/migrations, recovery, and installer data-retention behavior within the approved app-data storage arrangement; Windows support/signing and installer configuration/validation remain outstanding.
+- Pi tool/extension scope is deferred by the writer. Resource/configuration compatibility and packaged utility-process lifecycle contracts remain unresolved.
+- Exact discovery/precedence and invocation of the required existing `brainstorm` skill through Pi's configured resources for the selected repository; clear missing-skill diagnostics are approved, but SDK compatibility remains unverified.
 - How the app identifies the generated PRD and knows when it is ready to display without depending on fragile wording in chat responses.
 - Branch/worktree naming and storage location.
-- Document save behavior, protection of manual edits during Pi edits, and whether Undo is included.
-- Session persistence and exact behavior after interruption.
+- Exact editing/undo/conflict/recovery contracts implementing the approved Save/Ctrl+S, save-before-Pi, read-only-during-Pi, and revision-bound approval policy.
+- Exact restart/interruption/corruption recovery contracts for the approved Pi-managed session persistence.
 
 ### Planning evidence and remaining audits
 
 - Product evidence: this brainstorm established the audience and the workflow decisions listed below.
 - Destination inspected: `projects/prd-creator/` was empty before this document was created; no existing PRD for this project was found there.
-- No implementation code, Pi SDK/RPC documentation, or runtime integration has been inspected for this product. No tests have been run.
+- gabPrd inventory: documentation, Pi orchestration assets, and orchestration/resource tests exist; no application manifest, source scaffold, or product build/test/package surface exists. An explicit approved bootstrap must establish real paths and commands before downstream implementation-ready tasks.
+- gabCode was inspected read-only at commit `855acf296072e476a07972fc3ecbd0c304aaa4eb`. Its Windows client is C#/.NET 10/WPF (`src/GabCode.Windows/GabCode.Windows.csproj`). Git/process/worktree implementations and tests exist, but the Markdown editor remains a design (`Documentation/design/2026-09-20-markdown-review-editing-prd.md`), Markdown currently opens externally, and Pi is terminal-hosted rather than managed by a structured session adapter. Unrelated release edits were preserved.
+- With Electron, gabCode's C# runtime code and WPF UI are not directly reusable. Requirements, language-neutral fixtures, and behavioral contracts are reuse candidates. Sharing a web editor would require a separate approved change to gabCode; no shared package/repository, sibling-checkout dependency, or cross-repository modification is authorized.
+- Official SDK, RPC, session-format/lifecycle, skill, and security documentation in the installed Pi 1.1.0 distribution was inspected. SDK sessions support an explicit workspace, persistent session managers, streamed/finalized messages, cancellation, and custom tool/resource configuration. RPC is a viable alternative. `message_end` carries a finalized message; `agent_settled` marks the end of automatic run activity. Neither proves draft readiness, writer approval, or publication. Startup, restart, controlled mutations, and failure paths still require automated integration evidence.
+- Official [Electron accessibility guidance](https://www.electronjs.org/docs/latest/tutorial/accessibility), [Forge TypeScript/Webpack](https://www.electronforge.io/templates/typescript-+-webpack-template), [Forge TypeScript/Vite](https://www.electronforge.io/templates/vite-+-typescript), and [Playwright Electron automation](https://playwright.dev/docs/api/class-electron) were inspected. Forge's Vite integration and Playwright's Electron automation are documented as experimental. Forge/Webpack/npm and Squirrel.Windows are selected; installer and test-tool configuration remain pending.
+- Remaining-stack recommendations were checked against the [CodeMirror guide](https://codemirror.net/docs/guide/) and [Tab/no-keyboard-trap policy](https://codemirror.net/examples/tab/), [`react-markdown` security guidance](https://github.com/remarkjs/react-markdown#security), [SQLite atomic-commit explanation](https://sqlite.org/atomiccommit.html), [`better-sqlite3` Electron rebuilding/unpacking guidance](https://github.com/WiseLibs/better-sqlite3/blob/master/docs/troubleshooting.md), [Forge Webpack](https://www.electronforge.io/config/plugins/webpack), [native-module unpacking](https://www.electronforge.io/config/plugins/auto-unpack-natives), and [Squirrel.Windows](https://www.electronforge.io/config/makers/squirrel.windows). These are documentation evidence, not packaged compatibility or accessibility results.
+- Native-installer research checked [Forge WiX MSI](https://www.electronforge.io/config/makers/wix-msi), [Microsoft Windows Installer](https://learn.microsoft.com/en-us/windows/win32/msi/windows-installer-portal), [Forge MSIX](https://www.electronforge.io/config/makers/msix), and [Microsoft MSIX overview](https://learn.microsoft.com/en-us/windows/msix/overview). MSI uses the built-in Windows Installer service; Forge's documented maker requires WiX Toolset v3 on the build machine, not users' machines. Forge MSIX support is currently experimental and requires Windows SDK build tools; MSIX installation requires a signed package with trusted publisher identity. Neither MSI nor MSIX is selected; the writer subsequently accepted Squirrel.Windows. MSI install context and MSIX filesystem/process/Pi/Git/configuration behavior would need explicit assessment if reconsidered, not assumed compatibility.
+- Team-resource integrity check `node verify/team-setup/check-resources.mjs` passed during planning; this is not application verification. Product runtime, packaging, Pi integration/restart, edit-conflict, publication, keyboard/screen-reader, 200% scaling, and reduced-motion evidence are **NOT CHECKED**, blocking unless explicitly accepted by the human.
 - This is not a parity or migration project, so a source-delta audit is not currently applicable.
 - Before implementation planning, refine this same document with the code/test inventory, official Pi integration evidence, completed Contract Impact Check, and proportional distributed-workflow assessment. Do not convert these unanswered design choices into implementation discovery tasks or claim them resolved.
 
@@ -191,34 +289,48 @@ Milestones describe delivery slices, not an authorized sprint or an implementati
 ### Confirmed decisions
 
 - Windows application for non-coders.
+- Electron desktop framework with strict TypeScript, React, and the Pi SDK in an Electron utility process.
+- Pi, Git, and `gh` are already installed and configured; v1 uses existing authentication, with safe diagnostics rather than tool installation or credential management.
+- An existing `brainstorm` skill must be available through Pi's configured resources. Missing availability produces a clear prerequisite message rather than bundled/copied skills or silent generic-chat fallback.
+- Brainstorm and product-designer create new PRDs using `yyyy-mm-dd-[prd name].md`; existing PRD revisions retain their filenames and creation dates, without automatic renames or collision overwrites.
+- Embedded SQLite with `better-sqlite3` for local app metadata, bundled with the application; no database server or separate user installation.
+- Electron Forge + Webpack + npm for build tooling, with Squirrel.Windows for a per-user setup executable; signing/trust and installer runtime evidence remain outstanding.
+- CodeMirror 6 for Markdown source editing and `react-markdown` + `remark-gfm` for read-only preview; source and preview are two views of one document rather than independently saved documents, with no raw HTML execution.
+- SQLite metadata and Pi-managed resumable session JSONL in gabPrd's per-user app-data folder, outside the repository; Markdown remains in its isolated worktree, and publication excludes conversations/app metadata.
+- Remaining detailed storage/recovery/installer-configuration/product choices and execution approval are separate decisions.
 - Choose an existing local repository folder and remember it as the default.
-- Create each PRD on its own branch/worktree from fetched `origin/main`.
+- Create each PRD on its own branch/worktree from fetched `origin/main`; follow the repository's document convention, falling back to `docs/design/` when none exists.
 - Run an interactive Pi brainstorm with answers entered inside the app.
-- Show and allow editing of the generated Markdown PRD.
-- Pi applies requested revisions directly to the draft.
+- Show and allow editing of the generated Markdown PRD, with explicit Save/Ctrl+S, visible unsaved changes, and manual undo/redo.
+- Save manual changes before Pi revisions; keep source editing read-only while Pi revises. Pi applies requested revisions directly to the draft without silently discarding manual work.
 - Preserve unfinished PRDs and conversations so writers can resume them.
-- Publish only after explicit approval; commit and push, with no pull request.
+- Publish only the exact saved revision after explicit approval; later edits invalidate approval. Commit and push, with no pull request.
+- Allow revisions after publication in v1; each later publication requires fresh approval, while past successful publication remains recorded.
 - Save this product contract under `projects/prd-creator/` in the requested repository.
 
 ### Questions to resolve during refinement
 
-- Which Pi integration and Windows UI stack best support an accessible embedded conversation and resumable sessions?
-- Who installs/configures Pi, providers, and Git credentials before a writer starts?
-- What should happen if the selected repository has no brainstorm skill?
-- Where should generated PRDs live when a repository has no established document convention?
-- How should manual editing behave while Pi is revising the same draft, and should Undo be part of the first release?
-- Does the first release allow further revisions after a PRD has already been published?
+- Define exact filenames/schema/migrations/recovery for the approved per-user app-data SQLite/Pi-session storage, plus Windows support/signing and installer data-retention/configuration policies. SQLite/`better-sqlite3`, CodeMirror 6, `react-markdown`/GFM, Forge/Webpack/npm, and per-user Squirrel.Windows are selected; required runtime/accessibility evidence is still outstanding.
+- Which versions, resource/configuration policies, and diagnostics keep the bundled Pi SDK compatible with the writer's existing configured environment? Additional tool/extension restriction discussion is deferred, not an approved scoped or unrestricted configuration.
+- Exact discovery/precedence, identity/path validation, and invocation contracts for the required configured `brainstorm` skill, including missing/unreadable-skill diagnostics and no-mutation tests.
+- Exact convention discovery/ambiguity handling, filesystem-safe name/date validation, and collision behavior for the approved repository-convention/`docs/design/` location and `yyyy-mm-dd-[prd name].md` naming policies.
+- Exact undo-history, external-edit conflict, cancellation, and recovery behavior around Pi revisions, enforcing the approved editing policy.
+- Exact draft/last-publication state, branch/remote-conflict reconciliation, and recovery contracts for approved post-publication revisions.
 - What worktree retention/deletion controls, if any, should the first release expose? No automatic destructive cleanup is approved.
 
 ## 12. User-Visible Acceptance Criteria
 
 - [ ] I can select an existing local repository and the app remembers it after restart.
+- [ ] If the required `brainstorm` skill is unavailable, I receive a clear prerequisite message instead of silent generic-chat fallback or automatic skill installation.
 - [ ] I can start a new PRD without issuing Git commands; it is isolated from existing work and based on freshly fetched `origin/main`.
 - [ ] I can enter an idea, read Pi's follow-up questions, and answer them inside the app until a PRD is created.
+- [ ] New PRDs follow the repository's folder convention, or use `docs/design/` when none exists, and use `yyyy-mm-dd-[prd name].md`; revisions retain existing filenames and do not move or overwrite other documents.
 - [ ] I can read the PRD as rendered Markdown and edit its Markdown source.
 - [ ] I can ask Pi to review or revise the document and see requested edits applied directly without losing my manual edits.
 - [ ] I can close the app and reopen an unfinished PRD with its saved draft and conversation intact.
-- [ ] Nothing is published until I explicitly approve it.
-- [ ] Publishing commits my approved PRD and pushes its dedicated branch, without including unrelated files, opening a pull request, or merging.
+- [ ] I can save explicitly with Save/Ctrl+S, see unsaved changes, and undo/redo manual edits; my changes are saved before Pi revises and the source editor is read-only during that revision.
+- [ ] Nothing is published until I explicitly approve the exact saved revision; later edits require fresh approval.
+- [ ] Publishing commits my approved PRD and pushes its dedicated branch, without including conversations, app metadata, or unrelated files, opening a pull request, or merging.
+- [ ] I can revise a published PRD; later edits are not published automatically, and each later publication requires fresh approval while previous successful publication remains recorded.
 - [ ] If something fails, I receive an understandable explanation, keep my existing work, and am not falsely told publication succeeded.
 - [ ] I can complete the primary workflow with a keyboard and screen reader and at 200% scaling/zoom.

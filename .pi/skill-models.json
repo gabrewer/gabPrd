@@ -5,7 +5,17 @@
   "assignments": {
     "pm-agent": {
       "provider": "openai-codex",
-      "model": "gpt-6.1-sol",
+      "model": "gpt-6-astra",
+      "thinkingLevel": "high"
+    },
+    "brainstorm": {
+      "provider": "openai-codex",
+      "model": "gpt-6-astra",
+      "thinkingLevel": "high"
+    },
+    "inspire": {
+      "provider": "openai-codex",
+      "model": "gpt-6-astra",
       "thinkingLevel": "high"
     },
     "team-lead": {
@@ -25,7 +35,7 @@
     },
     "pm": {
       "provider": "openai-codex",
-      "model": "gpt-6.1-sol",
+      "model": "gpt-6-astra",
       "thinkingLevel": "high"
     },
     "desktop-architect": {
@@ -125,7 +135,7 @@
     },
     "git-committer": {
       "provider": "openai-codex",
-      "model": "gpt-6.1-sol",
+      "model": "gpt-6-luna",
       "thinkingLevel": "medium"
     },
     "acceptance-coordinator": {

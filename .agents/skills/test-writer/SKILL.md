@@ -17,6 +17,8 @@ Role instructions are behavioral boundaries, not an OS sandbox or native isolate
 
 Read original task acceptance, typed contracts/domain invariants, actual test conventions, and approved dependency/provider policy.
 
+For Electron boundary tests, read sections 2-8 of `.agents/skills/desktop-architect/references/electron-development.md` (repository-root reference); resource checks are not runtime or accessibility evidence.
+
 ## Responsibilities and handoff
 
 Write tests for new behavior before implementation, recording expected red evidence; existing regression guarantees may already pass and need baseline evidence. Cover real temp Git repos/remotes, persistence/restart, file links, Pi lifecycle, races, rejection/no-mutation, and sentinel-secret errors.

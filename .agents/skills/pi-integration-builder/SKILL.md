@@ -17,6 +17,8 @@ Role instructions are behavioral boundaries, not an OS sandbox or native isolate
 
 Read official Pi docs applicable to the selected interface, integration evidence, typed contracts, and task tests before editing.
 
+For approved Electron/Pi hosting tasks, read sections 2, 5 and 7-8 of `.agents/skills/desktop-architect/references/electron-development.md` (repository-root reference); Pi capability policy remains deferred and contracts still gate implementation.
+
 ## Responsibilities and handoff
 
 Implement process/session creation, request/event exchange, configured skill invocation, structured document discovery, cancellation, provider failure handling, and resume. Expose safe typed results to services and conversation UI.
