@@ -17,6 +17,8 @@ Role instructions are behavioral boundaries, not an OS sandbox or native isolate
 
 Read changed task-owned files, contracts, threat/risk notes, and boundary tests. Expand only when a concrete finding needs related context.
 
+For task-owned Electron boundaries, read sections 2-5 and 7-8 of `.agents/skills/desktop-architect/references/electron-development.md` (repository-root reference); guidance does not expand audit scope or permit production fixes.
+
 ## Responsibilities and handoff
 
 Assess secret-safe errors, path traversal/symlinks and containment under selected OS policy, forged/mismatched resource links, untrusted Markdown, unintended staging, dangerous subprocess arguments, and destructive recovery. Hand evidence-backed findings to destroyer/review-agent.

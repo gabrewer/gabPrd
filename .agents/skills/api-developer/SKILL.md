@@ -17,6 +17,8 @@ Role instructions are behavioral boundaries, not an OS sandbox or native isolate
 
 Read approved domain model, Pi evidence, selected UI/process architecture, and actual contracts. API means local/IPC/SDK boundaries unless HTTP is explicitly selected.
 
+For Electron IPC/asset/recovery contracts, read sections 2-4 and 7 of `.agents/skills/desktop-architect/references/electron-development.md` (repository-root reference); retain this role's contract authority.
+
 ## Responsibilities and handoff
 
 Specify typed commands/results/events, lifecycle/cancellation semantics, versioning if needed, and safe error contracts. Define validation before mutation and contracts for Git, file edits, session operations, persistence, and UI notification. Hand the same contracts to all builders/test-writer.

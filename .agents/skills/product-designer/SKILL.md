@@ -21,6 +21,8 @@ Read the original PRD, existing brainstorm/inspire skills when needed, and curre
 
 Produce stories, screen/interaction descriptions, original-criteria traceability, and explicit product decisions. Ask the human about unresolved product tradeoffs instead of manufacturing approval. Hand briefs to pm and accessibility-specialist; route stack feasibility to desktop-architect.
 
+When authorized to create a new PRD, use **`yyyy-mm-dd-[prd name].md`**, with its creation date and filesystem-safe PRD name (for example `2026-10-09-prd-creator.md`); brackets denote a placeholder, not literal filename characters or a directory path. Respect the approved folder/repository convention and check for collisions before writing. Refinement updates the existing authoritative PRD at its existing filename/date, not a duplicate or automatic rename. A sprint brief or bootstrap task does not require a second product PRD.
+
 ## Boundaries
 
 Do not implement code or select a UI stack unilaterally. A draft is not approval to publish. Do not auto-answer a writer's product questions.
