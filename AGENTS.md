@@ -23,7 +23,7 @@
 - Product publication requires explicit writer approval and publishes only the approved PRD on its own branch. No product-generated PRs, automatic merging, force-pushing, auto-answers, or destructive worktree cleanup.
 - Require automated integration evidence for Git, Pi lifecycle, persistence/restart, concurrent edits, and other runtime boundaries. Validate rejection/no-mutation paths and secret-safe errors with sentinel secrets.
 - Require real Windows runtime, keyboard/screen-reader, 200% scaling, and reduced-motion evidence. Unavailable evidence is `NOT CHECKED` and blocking unless a human explicitly accepts the gap.
-- Worker roles run sequentially in the active Pi session by default. Skills and model metadata do not create isolated agents, enforce permissions, or switch models. See `docs/team/README.md` for manual routing and limitations.
+- Worker roles run sequentially in the active Pi session by default. Skills/model metadata alone do not isolate agents, enforce permissions, or switch models. The optional `sprint_workers` extension runs at most two approved ready builders in detached worktrees with explicit subprocess model/tool flags. Use disjoint scopes and committed contracts/tests/dependencies; account for dirty parent changes first. Parent owns GitHub updates, shared runtime, integration, commits and gates. Never auto-integrate or treat return as completion. Read `docs/team/sprint-workers.md` before dispatch. This is process/worktree isolation, not an OS sandbox; parent routing remains manual.
 
 ## Git safety and review boundaries
 
