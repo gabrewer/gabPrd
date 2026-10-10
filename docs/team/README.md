@@ -6,7 +6,7 @@
 - `/team-lead <approved sprint issue>`: sequential specialized-role execution and canonical quality gates.
 - `/pr-checkpoint [base]`: read-only branch-growth/review-boundary report.
 
-Run `/reload` after installing resources, or start a new trusted Pi session from the repository root. The durable backend is resolved from automatically loaded AGENTS.md; workers never prompt for it again. GitHub bodies/comments are the execution record. Setup is tracked in https://github.com/gabrewer/gabPrd/issues/2. Do not use that setup issue as approval of app implementation.
+Run `/reload` after installing resources, or start a new trusted Pi session from the repository root. Optional bounded builder delegation is implemented by `.pi/extensions/sprint-workers.ts`; see [sprint workers](sprint-workers.md) for scope, preflight, cancellation, and parent-owned integration. `/sprint-view` and `/sprint-pause` are display/cancellation utilities, not additional planning/execution front doors. The durable backend is resolved from automatically loaded AGENTS.md; workers never prompt for it again. GitHub bodies/comments are the execution record. Setup is tracked in https://github.com/gabrewer/gabPrd/issues/2. Do not use that setup issue as approval of app implementation.
 
 ## Resource and model map
 
@@ -50,7 +50,7 @@ Contract changes return to domain/contract roles; test defects return to test-wr
 
 ## Model routing and isolation limits
 
-No router extension is installed. `.pi/skill-models.json` documents assignments only; Pi does not interpret it natively. Project settings establish GPT-6.1 Sol/high for new sessions, but CLI/resumed-session selection can override them. Verify the active model/level before each phase. Use `/model` and `/thinking` manually for interactive role changes, or an authorized isolated subprocess with explicit flags, for example:
+No parent-session model-router extension is installed. `.pi/skill-models.json` documents assignments; Pi does not interpret it natively. The sprint worker extension reads builder assignments and explicitly passes provider/model/thinking flags to subprocesses, after checking availability. It never switches the parent model. Project settings establish GPT-6.1 Sol/high for new sessions, but CLI/resumed-session selection can override them. Verify the active model/level before each phase. Use `/model` and `/thinking` manually for interactive role changes, or an authorized isolated subprocess with explicit flags, for example:
 
 ```bash
 pi --approve --no-extensions --no-session --model openai-codex/gpt-6.1-sol --thinking high --tools read,grep,find,ls --skill .agents/skills/review-agent/SKILL.md -p "Summarize review boundaries. Do not edit files."
@@ -58,7 +58,7 @@ pi --approve --no-extensions --no-session --model openai-codex/gpt-6.1-sol --thi
 
 Do not claim a medium assignment was applied if the session remained high; verify it or record a human-approved deviation. Missing models block routing rather than trigger a silent fallback. An automatic routing extension is a separate future task, not implied by this file.
 
-Default execution is the active session adopting skills sequentially. This provides distinct instructions, not independent reasoning contexts or native subagents. Read-only tool allowlists omit bash; bash and extensions can mutate files and are not sandbox boundaries. For independent/parallel workers, first approve a mechanism with real process/worktree isolation, explicit tools and safe file ownership. Never fake parallel delegation.
+Default execution is the active session adopting skills sequentially. This provides distinct instructions, not independent reasoning contexts or native subagents. The requested sprint-workers extension adds up to two independent builder subprocesses with detached worktrees, disjoint file ownership, explicit tool/model flags, and joined results. Use it only for approved, ready tasks whose tests/contracts/dependencies are already committed. Shared runtime, integration and quality gates remain in the parent. Worktrees/subprocesses are not an OS sandbox; bash still has user permissions and ownership breaches are detected after execution. Read-only tool allowlists omit bash. Never describe sequential skill adoption as parallel delegation or worker return as acceptance.
 
 ## Verification
 

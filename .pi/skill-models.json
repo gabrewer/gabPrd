@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "routing": "manual",
-  "note": "Auditable assignments only; no extension consumes this file in this setup.",
+  "note": "Parent interactive routing is manual. The sprint_workers extension consumes builder assignments for explicit subprocess model/thinking flags; it does not switch the parent model.",
   "assignments": {
     "pm-agent": {
       "provider": "openai-codex",
