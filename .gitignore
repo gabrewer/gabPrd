@@ -1,1 +1,6 @@
 .pi/tmp/
+node_modules/
+.webpack/
+out/
+test-results/
+playwright-report/

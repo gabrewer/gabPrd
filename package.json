@@ -1,0 +1,50 @@
+{
+  "name": "gabprd",
+  "version": "0.0.0",
+  "main": ".webpack/main/index.cjs",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test:unit": "node --import tsx --test --test-concurrency=1 tests/bootstrap/contract.test.ts tests/bootstrap/state.test.ts tests/bootstrap/fixture-root.test.ts",
+    "rebuild:sqlite": "electron-rebuild --force --only better-sqlite3 --version 44.7.0 --arch x64",
+    "start": "electron-forge start",
+    "build": "electron-forge package --platform win32 --arch x64",
+    "package": "electron-forge package --platform win32 --arch x64",
+    "inspect:package": "node scripts/inspect-package.mjs",
+    "test:runtime": "playwright test --config playwright.config.ts",
+    "verify:bootstrap": "node scripts/bootstrap-verify.mjs"
+  },
+  "type": "module",
+  "productName": "PRD Creator",
+  "config": {
+    "forge": "./forge.config.mjs"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=24.13.0 <25",
+    "npm": ">=11.6.2 <12"
+  },
+  "packageManager": "npm@11.6.2",
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "1.1.0",
+    "better-sqlite3": "13.0.3",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "8.0.1",
+    "@electron-forge/plugin-auto-unpack-natives": "8.0.1",
+    "@electron/asar": "4.3.1",
+    "@electron/rebuild": "4.2.1",
+    "@playwright/test": "1.64.0",
+    "@types/better-sqlite3": "9.6.0",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "axe-core": "4.13.0",
+    "electron": "44.7.0",
+    "ts-loader": "9.6.2",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "webpack": "5.111.1"
+  }
+}
