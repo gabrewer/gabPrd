@@ -28,6 +28,11 @@
       "model": "gpt-6.1-sol",
       "thinkingLevel": "high"
     },
+    "pull-request": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "thinkingLevel": "high"
+    },
     "product-designer": {
       "provider": "openai-codex",
       "model": "gpt-6.1-sol",
