@@ -2,15 +2,16 @@ import { BrowserWindow, Menu } from 'electron';
 import { SHELL_URL } from '../shared/bootstrap-contracts';
 
 /** Create only: main must register IPC and the asset protocol before loading SHELL_URL. */
-export function createBootstrapWindow(): BrowserWindow {
+export function createBootstrapWindow(diagnosticFixture = false): BrowserWindow {
   const window = new BrowserWindow({
-    title: 'PRD Creator — Bootstrap',
+    title: diagnosticFixture ? 'PRD Creator — Bootstrap' : 'PRD Creator',
     width: 1000,
     height: 760,
     minWidth: 640,
     minHeight: 480,
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
+      additionalArguments: diagnosticFixture ? ['--gabprd-bootstrap-fixture-ui'] : [],
       sandbox: true,
       contextIsolation: true,
       nodeIntegration: false,

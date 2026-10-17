@@ -21,6 +21,17 @@ function checkText(check: SqliteCheck | PiSdkCheck | undefined, kind: 'sqlite' |
 }
 
 export default function App() {
+  const [diagnosticFixture, setDiagnosticFixture] = useState(() => document.documentElement.dataset.bootstrapFixture === 'true');
+  useEffect(() => {
+    const update = () => setDiagnosticFixture(document.documentElement.dataset.bootstrapFixture === 'true');
+    document.addEventListener('gabprd-bootstrap-fixture', update);
+    update();
+    return () => document.removeEventListener('gabprd-bootstrap-fixture', update);
+  }, []);
+  return diagnosticFixture ? <BootstrapDiagnostics /> : <main aria-label="PRD Creator" />;
+}
+
+function BootstrapDiagnostics() {
   const [result, setResult] = useState<BootstrapResult>();
   const [announcement, setAnnouncement] = useState('');
   const refresh = useRef<() => void>(() => {});

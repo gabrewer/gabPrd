@@ -3,6 +3,15 @@ import { CONTRACT_VERSION, STATUS_CHANNEL } from '../shared/bootstrap-contracts'
 import type { BootstrapResult } from '../shared/bootstrap-contracts';
 import { parseResult, safeError } from '../shared/bootstrap-validation';
 
+// Presentation only: this DOM marker grants no IPC or filesystem authority.
+if (process.argv.includes('--gabprd-bootstrap-fixture-ui')) {
+  window.addEventListener('DOMContentLoaded', () => {
+    document.documentElement.dataset.bootstrapFixture = 'true';
+    document.title = 'PRD Creator — Bootstrap';
+    document.dispatchEvent(new Event('gabprd-bootstrap-fixture'));
+  }, { once: true });
+}
+
 const bootstrap = Object.freeze({
   async getStatus(): Promise<BootstrapResult> {
     try {

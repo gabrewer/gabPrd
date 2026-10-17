@@ -105,7 +105,7 @@ function bootstrap(): void {
     if (stopping) return;
     try {
       installAssetProtocol(session.defaultSession, app.getAppPath());
-      ownedWindow = createBootstrapWindow();
+      ownedWindow = createBootstrapWindow(process.argv.some(argument => argument.startsWith('--bootstrap-fixture-root=')));
       disposeIpc = registerBootstrapIpc(ownedWindow, controller);
       await ownedWindow.loadURL(SHELL_URL);
     } catch {
