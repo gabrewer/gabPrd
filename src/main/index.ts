@@ -14,6 +14,7 @@ import { registerBootstrapIpc } from './ipc';
 import { startPiUtility } from './pi-utility';
 import { probeSqlite } from './sqlite-probe';
 import { createBootstrapWindow } from './window';
+import { startProduct } from './prd-startup';
 
 function report(code: 'FIXTURE_INVALID' | 'INTERNAL'): void {
   console.error(safeError(code).message);
@@ -135,4 +136,5 @@ function bootstrap(): void {
   });
 }
 
-bootstrap();
+if(process.argv.some(argument=>argument==='--bootstrap-fixture-root'||argument.startsWith('--bootstrap-fixture-root=')))bootstrap();
+else startProduct();

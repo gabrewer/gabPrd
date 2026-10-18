@@ -1,0 +1,29 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import path from 'node:path';
+import {mkdirSync,writeFileSync,readFileSync,unlinkSync,utimesSync,statSync,renameSync,symlinkSync} from 'node:fs';
+import {PrdDocuments} from '../../src/main/prd-documents';
+import {PrdWorkspace} from '../../src/main/prd-workspace';
+import {PRD_LIMITS as L} from '../../src/shared/prd-contracts';
+import {fixture,value,id,ok} from './documents.fixture';
+
+test('P06 actual candidate ambiguity and forged selection preserve data; identical observations share a verified read',async t=>{
+ const f=await fixture(t);value(await f.docs.inventory(f.prd(),f.workspace));const a=f.produce(0),b=f.produce(1);const page=value(await f.docs.candidates(f.prd(),f.workspace));assert.equal(page.items.length,2);assert.equal(f.prd().documentId,null);const candidates=value(f.store.transaction(tx=>ok(tx.candidates(f.prdId)))),before=f.snapshot();assert.equal((await f.docs.register(f.prd(),f.workspace,{...candidates[0]!,candidateId:id()})).ok,false);assert.deepEqual(f.snapshot(),before);assert.equal(readFileSync(a.path,'utf8'),a.text);assert.equal(readFileSync(b.path,'utf8'),b.text);
+ const registered=value(await f.docs.register(f.prd(),f.workspace,candidates[0]!));const reads=await Promise.all([f.docs.read(f.workspace,registered),f.docs.reconcile(f.workspace,registered),f.docs.read(f.workspace,registered)]);assert.ok(reads.every(r=>r.ok));assert.equal(value(reads[0]!).revision,value(reads[2]!).revision);assert.equal(f.prd().displayName,'PRD Creator');
+});
+test('P06 same-size external edit rejects stale save before target or recovery metadata mutation',async t=>{
+ const f=await fixture(t);value(await f.docs.inventory(f.prd(),f.workspace));const generated=f.produce();await f.register();const input=f.saveIntent('# Writer buffer\n'),before=f.snapshot(),stat=statSync(generated.path);const changed=generated.text.replace('Interactive','INTERACTIVE');assert.equal(Buffer.byteLength(changed),Buffer.byteLength(generated.text));writeFileSync(generated.path,changed);utimesSync(generated.path,stat.atime,stat.mtime);const result=await f.docs.save(input);assert.equal(result.ok,false);if(!result.ok)assert.equal(result.error.code,'REVISION_CONFLICT');assert.deepEqual(f.snapshot(),before);assert.equal(readFileSync(generated.path,'utf8'),changed);assert.equal(input.text,'# Writer buffer\n');
+});
+test('P06 controlled before-replace writer retains preimage/intended evidence and never overwrites external text',async t=>{
+ let file='';const external='# External writer BEFORE replacement\n';const f=await fixture(t,{beforeReplace:()=>writeFileSync(file,external)});value(await f.docs.inventory(f.prd(),f.workspace));file=f.produce().path;const original=readFileSync(file,'utf8');await f.register();const input=f.saveIntent('# Retain this writer buffer\n'),result=await f.docs.save(input);assert.equal(result.ok,false);if(!result.ok)assert.equal(result.error.code,'REVISION_CONFLICT');assert.equal(readFileSync(file,'utf8'),external);const recovery=value(f.store.transaction(tx=>ok(tx.recovery(input.operation.operationId))))!;assert.equal(recovery.phase,'uncertain');assert.equal(readFileSync(recovery.preimagePath,'utf8'),original);assert.equal(readFileSync(recovery.intendedPath,'utf8'),input.text);
+});
+test('P06 controlled after-replace interference and restart preserve evidence without replay or rollback',async t=>{
+ let file='';const external='# External writer AFTER replacement\n';const f=await fixture(t,{afterReplace:()=>writeFileSync(file,external)});value(await f.docs.inventory(f.prd(),f.workspace));file=f.produce().path;const original=readFileSync(file,'utf8');await f.register();const input=f.saveIntent('# Intended saved bytes\n');assert.equal((await f.docs.save(input)).ok,false);assert.equal(readFileSync(file,'utf8'),external);const recovery=value(f.store.transaction(tx=>ok(tx.recovery(input.operation.operationId))))!;await f.store.close();value(await f.store.open(f.userData));value(f.store.recoverInterrupted());const restarted=new PrdDocuments(f.store,f.roots,new PrdWorkspace(f.store,f.roots));assert.equal(value(await restarted.recover(recovery)).phase,'uncertain');assert.equal(readFileSync(file,'utf8'),external);assert.equal(readFileSync(recovery.preimagePath,'utf8'),original);assert.equal(readFileSync(recovery.intendedPath,'utf8'),input.text);
+});
+test('P06 successful save is verified and missing document keeps identity rather than recreating data',async t=>{
+ const f=await fixture(t);value(await f.docs.inventory(f.prd(),f.workspace));const generated=f.produce();await f.register();const previous=f.document(),input=f.saveIntent('# PRD Creator\n\nSaved review.\n'),saved=value(await f.docs.save(input));assert.equal(saved.recovery.phase,'verified');assert.notEqual(saved.document.revision.token,previous.revision.token);assert.equal(readFileSync(generated.path,'utf8'),input.text);const idBefore=f.prd().documentId;unlinkSync(generated.path);const missing=value(await f.docs.reconcile(f.workspace,saved.document));assert.equal(missing.document.state,'missing');assert.equal(missing.body,null);assert.equal(f.prd().documentId,idBefore);assert.equal((await f.docs.read(f.workspace,missing.document)).ok,false);
+});
+test('P06 malformed UTF-8 Markdown never registers and errors cannot leak sentinel paths or bytes',async t=>{
+ const f=await fixture(t);value(await f.docs.inventory(f.prd(),f.workspace));const generated=f.produce();writeFileSync(generated.path,Buffer.from([0xff,0xfe,0x00,0x50,0x30,0x36]));const before=f.snapshot(),result=await f.docs.candidates(f.prd(),f.workspace);assert.equal(result.ok,false);assert.doesNotMatch(JSON.stringify(result),/document-case-|P06_SENTINEL/);assert.deepEqual(f.snapshot(),before);assert.equal(f.prd().documentId,null);assert.deepEqual(readFileSync(generated.path),Buffer.from([0xff,0xfe,0x00,0x50,0x30,0x36]));
+});
+

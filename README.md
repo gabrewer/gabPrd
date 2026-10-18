@@ -3,6 +3,10 @@ A Windows PRD-writing companion to [gabCode](https://github.com/gabrewer/gabCode
 
 ## Status
 
+The approved **core beta** scope is idea → configured brainstorm → generated PRD → conversation-led revisions → reopen. See the [beta quickstart and prerequisites](docs/beta-quickstart.md). The document view is read-only; the manual editor and visual polish are deferred. Build/test evidence is not release acceptance: [sprint #13](https://github.com/gabrewer/gabPrd/issues/13) owns current gates and disposition.
+
+### Historical bootstrap context
+
 Original planning statement: “Product definition only; implementation has not started.” See the [initial product requirements](docs/design/2026-10-09-prd-creator-prd.md).
 
 BOOT-001 provides a bounded Windows desktop toolchain and bootstrap shell with secure preload/IPC, fixture validation, a native SQLite probe and Pi utility import/asset checks. The automated verifier builds and inspects the package, then exercises the actual packaged Windows executable for native SQLite loading/reopen/restart, SDK import/assets and bootstrap boundary checks; sources and type/unit checks alone are not packaged runtime evidence. See [BOOT-001 / issue #9](https://github.com/gabrewer/gabPrd/issues/9) and [planning epic #8](https://github.com/gabrewer/gabPrd/issues/8) for authoritative execution evidence and remaining human Windows, quality-review, commit, final-smoke and acceptance gates. Conversations, documents and publishing are not implemented by this bootstrap.

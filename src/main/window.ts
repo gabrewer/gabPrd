@@ -11,7 +11,7 @@ export function createBootstrapWindow(diagnosticFixture = false): BrowserWindow 
     minHeight: 480,
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
-      additionalArguments: diagnosticFixture ? ['--gabprd-bootstrap-fixture-ui'] : [],
+      additionalArguments: diagnosticFixture ? ['--gabprd-bootstrap-fixture-ui'] : ['--gabprd-product'],
       sandbox: true,
       contextIsolation: true,
       nodeIntegration: false,
