@@ -167,7 +167,7 @@ const historyPage = page(object({entryId:opaque,messageId:opaque,role:literal('w
 const target = {prdId:uuid}, versioned = {...target,expectedVersion:uuid};
 const requestShapes: Record<string,Record<string,Schema>> = {
   NativePickRepository:{},SetDefaultRepository:{repositoryId:nullable(uuid),expectedVersion:uuid},ListPrds:{cursor:nullable(cursor)},
-  CreatePrd:{repositoryId:uuid,displayName:text(L.displayNameBytes,false),idea:text(L.inputBytes,false)},OpenPrd:{...target,subscriptionId:uuid},
+  CreatePrd:{repositoryId:uuid,idea:text(L.inputBytes,false)},OpenPrd:{...target,subscriptionId:uuid},
   ReadHistory:{...target,sessionId:uuid,cursor:nullable(cursor)},ReadDocument:{...target,documentId:uuid},
   SaveDocument:{...versioned,documentId:uuid,expectedDocumentRevision:uuid,text:text(L.documentBytes)},ListDraftCandidates:{...target,cursor:nullable(cursor)},
   SendTurn:{...versioned,expectedDocumentRevision:nullable(uuid),sessionId:uuid,text:text(L.inputBytes,false),intent:literal('conversation','reviseDocument')},
@@ -239,7 +239,7 @@ const piCommands = refine(tagged('type',{
     brainstorm:{binding,idea:text(L.inputBytes,false),convention,relativePath:markdownPath,creationDate:date},literalTurn:{text:text(L.inputBytes,false)},
   })},
   'pi.answer':{sessionId:uuid,questionId:uuid,answer},'pi.abort':{sessionId:uuid},'pi.reconcile':{sessionId:uuid},
-  'pi.ack':{sessionId:uuid,throughSequence:integer()},'pi.close':{sessionId:nullable(uuid)},
+  'pi.ack':{sessionId:nullable(uuid),throughSequence:integer()},'pi.close':{sessionId:nullable(uuid)},
 },{contractVersion:literal(1),...correlationShape}),v=>{
   if (v.type==='pi.start' && v.session.mode!=='create') {
     const r=v.session.record;

@@ -174,7 +174,7 @@ export interface PrdCommandBodies {
   NativePickRepository: Readonly<Record<never, never>>;
   SetDefaultRepository: Readonly<{ repositoryId: RepositoryId | null; expectedVersion: RecordVersion }>;
   ListPrds: Readonly<{ cursor: Cursor | null }>;
-  CreatePrd: Readonly<{ repositoryId: RepositoryId; displayName: string; idea: string }>;
+  CreatePrd: Readonly<{ repositoryId: RepositoryId; idea: string }>;
   OpenPrd: PrdTarget & Readonly<{ subscriptionId: SubscriptionId }>;
   ReadHistory: PrdTarget & Readonly<{ sessionId: SessionId; cursor: Cursor | null }>;
   ReadDocument: DocumentTarget;
@@ -359,7 +359,7 @@ export type PiUtilityCommand = Readonly<{ contractVersion: typeof PRD_CONTRACT_V
   | Readonly<{ type: 'pi.answer'; sessionId: SessionId; questionId: QuestionId; answer: UiAnswer }>
   | Readonly<{ type: 'pi.abort'; sessionId: SessionId }>
   | Readonly<{ type: 'pi.reconcile'; sessionId: SessionId }>
-  | Readonly<{ type: 'pi.ack'; sessionId: SessionId; throughSequence: EventSequence }>
+  | Readonly<{ type: 'pi.ack'; sessionId: SessionId | null; throughSequence: EventSequence }>
   | Readonly<{ type: 'pi.close'; sessionId: SessionId | null }>
 );
 export type PiUtilityEvent = Readonly<{ contractVersion: typeof PRD_CONTRACT_VERSION; sequence: EventSequence }>

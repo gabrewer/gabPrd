@@ -27,7 +27,7 @@ const candidate = {candidateId,relativePath:body.relativePath,conventionId,revis
 const history = {entryId:'entry-1',messageId:'msg-1',role:'assistant',text:'Question?',textStatus:'complete',persistedAt:now};
 const requests: Record<string, object> = {
   NativePickRepository:{}, SetDefaultRepository:{repositoryId,expectedVersion:version}, ListPrds:{cursor:null},
-  CreatePrd:{repositoryId,displayName:'Idea',idea:'Make it useful'}, OpenPrd:{prdId,subscriptionId},
+  CreatePrd:{repositoryId,idea:'Make it useful'}, OpenPrd:{prdId,subscriptionId},
   ReadHistory:{prdId,sessionId,cursor:null},ReadDocument:{prdId,documentId},
   SaveDocument:{prdId,documentId,expectedVersion:version,expectedDocumentRevision:revision,text:'# Idea'},
   ListDraftCandidates:{prdId,cursor:null},SelectDraft:{prdId,expectedVersion:version,selection:'candidate',candidateId,expectedDocumentRevision:revision},
@@ -67,7 +67,7 @@ const commands = [
   {type:'pi.prompt',sessionId,input:{kind:'brainstorm',binding,idea:'Initial idea',convention,relativePath:body.relativePath,creationDate:'2026-10-16'}},
   {type:'pi.prompt',sessionId,input:{kind:'literalTurn',text:'literal $1'}},
   {type:'pi.answer',sessionId,questionId,answer:{kind:'cancel'}},{type:'pi.abort',sessionId},
-  {type:'pi.reconcile',sessionId},{type:'pi.ack',sessionId,throughSequence:1},{type:'pi.close',sessionId:null},
+  {type:'pi.reconcile',sessionId},{type:'pi.ack',sessionId,throughSequence:1},{type:'pi.ack',sessionId:null,throughSequence:1},{type:'pi.close',sessionId:null},
 ];
 const piEvents = [
   {type:'pi.sessionAllocated',record:{...record,state:'allocated',headerVersion:null,lastPersistedEntryId:null}},
@@ -164,10 +164,10 @@ test('request unions, literal cancel, nullable conventions/defaults and Unicode 
     assert.equal(parsePrdRequest(req('AnswerUiQuestion',{...requests.AnswerUiQuestion,answer})),undefined);
   assert.ok(parsePrdRequest(req('SelectDraft',{prdId,expectedVersion:version,selection:'convention',conventionId,expectedDocumentRevision:null})));
   assert.ok(parsePrdRequest(req('SetDefaultRepository',{repositoryId:null,expectedVersion:version})));
-  for (const bad of ['A'.repeat(161),'é'.repeat(81),'\0','\ud800',''])
-    assert.equal(parsePrdRequest(req('CreatePrd',{repositoryId,displayName:bad,idea:'idea'})),undefined);
-  assert.ok(parsePrdRequest(req('CreatePrd',{repositoryId,displayName:'é'.repeat(80),idea:'x'.repeat(L.inputBytes)})));
-  assert.equal(parsePrdRequest(req('CreatePrd',{repositoryId,displayName:'Idea',idea:'x'.repeat(L.inputBytes+1)})),undefined);
+  for (const bad of ['x'.repeat(L.inputBytes+1),'é'.repeat(L.inputBytes/2+1),'\0','\ud800',''])
+    assert.equal(parsePrdRequest(req('CreatePrd',{repositoryId,idea:bad})),undefined);
+  assert.ok(parsePrdRequest(req('CreatePrd',{repositoryId,idea:'x'.repeat(L.inputBytes)})));
+  assert.equal(parsePrdRequest(req('CreatePrd',{repositoryId,displayName:'Not a writer input',idea:'idea'})),undefined);
   for (const bad of ['../outside.md','C:/outside.md','docs/CON.md','docs/a.md:secret','docs/a. /x.md','docs/a.txt','docs//a.md'])
     assert.equal(parsePrdResult(result('ReadDocument',{...body,relativePath:bad}),req('ReadDocument') as PrdRequest),undefined);
   assert.equal(parsePrdResult(result('ReadDocument',{...body,byteLength:7}),req('ReadDocument') as PrdRequest),undefined);
