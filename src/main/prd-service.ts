@@ -167,7 +167,7 @@ export class PrdService implements PrdServicePort {
    const repository=this.read(tx=>tx.repository(r.repositoryId));requireStore(repository,'NOT_FOUND');const prdId=id<C.PrdId>(),workspaceId=id<C.WorkspaceId>(),operationId=id<C.OperationId>(),now=new Date(),date=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-') as C.CreationDate;
    const displayName=ideaLabel(r.idea,prdId);take(resolvePrdLocation(displayName,date,{conventionId:id(),workspaceId,relativeFolder:'docs/design',source:'fallback',selected:false}));this.lease(prdId,repository);
    try{
-    const workspace=take(await d.workspace.plan(repository,prdId,workspaceId,operationId));this.authorize(caller);
+    const workspace=take(await d.workspace.plan(repository,prdId,workspaceId,operationId,r.idea));this.authorize(caller);
     const prd:C.PrdRecord={prdId,workspaceId,displayName,creationDate:date,version:id(),lifecycle:'createPending',initialIdea:r.idea,conventionId:null,plannedRelativePath:null,eventSequence:0 as C.EventSequence,documentId:null,sessionId:null};
     const operation:C.OperationRecord={operationId,requestId:r.requestId,prdId,sessionId:null,generationId:id(),kind:'create',phase:'starting',outcome:null,error:null,expectedVersion:prd.version,expectedDocumentRevision:null,lastSequence:0 as C.EventSequence,step:'fetchBase',stepState:'intent',recoveryDirectory:null};
     this.read(tx=>{requireStore(!tx.operationByRequest(r.requestId),'STALE_VERSION');tx.putPrd(prd,null);tx.putWorkspace(workspace);tx.putOperation(operation);});this.lastOperation.set(prdId,operationId);const value={snapshot:this.snapshot(prdId),operation:this.operationView(operation)};this.schedule(()=>this.setup(prdId));return value;

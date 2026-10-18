@@ -66,8 +66,8 @@ export interface WorkspaceStepResult {
 }
 export interface PrdWorkspacePort {
   register(selectedCheckout: CanonicalPath): Promise<PortResult<RepositoryRecord>>;
-  /** Read-only original-checkout snapshot, before durable provisioning admission. */
-  plan(repository: RepositoryRecord, prdId: PrdId, workspaceId: WorkspaceId, operationId: OperationId): Promise<PortResult<WorkspaceRecord>>;
+  /** Read-only snapshot and immutable idea-derived branch, before durable provisioning admission. */
+  plan(repository: RepositoryRecord, prdId: PrdId, workspaceId: WorkspaceId, operationId: OperationId, initialIdea: string): Promise<PortResult<WorkspaceRecord>>;
   /** Intent is already durable. Each step verifies previous links and records observed effects. */
   provision(repository: RepositoryRecord, workspace: WorkspaceRecord, operation: OperationRecord): Promise<PortResult<WorkspaceStepResult>>;
   retry(repository: RepositoryRecord, workspace: WorkspaceRecord, operation: OperationRecord): Promise<PortResult<WorkspaceStepResult>>;

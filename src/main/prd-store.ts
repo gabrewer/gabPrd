@@ -9,6 +9,7 @@ import type {PrdStorePort,StoreTransaction,PortResult,ProductRoots} from './prd-
 import {TABLES,SCHEMA_SQL,IDENTITY_SQL,INDEX_SQL,StoreFault,requireStore,storeFailure,encode,decode,verifyGraph} from './prd-schema';
 import type {Table} from './prd-schema';
 import {canonicalStat,verifiedDirectory,identityOf,sameIdentity,contained} from './prd-paths';
+import {prdBranchName} from './prd-branch';
 const token=<T extends string>()=>randomUUID() as T;
 const cp=(p:string)=>p as C.CanonicalPath;
 const success=<T>(value:T):PortResult<T>=>({ok:true,value});
@@ -97,7 +98,7 @@ export class PrdStore implements PrdStorePort {
   for(const table of Object.values(TABLES))for(const row of db.prepare('SELECT * FROM '+table.name).iterate() as Iterable<Record<string,unknown>>)decode(table,row);
   const root=roots.marker.canonicalRoot;
   for(const row of db.prepare('SELECT * FROM repositories').iterate() as Iterable<Record<string,unknown>>){const r=decode<C.RepositoryRecord>(TABLES.repositories,row);requireStore(r.checkoutRoot!==root&&!contained(r.checkoutRoot,root)&&!contained(root,r.checkoutRoot));}
-  for(const row of db.prepare('SELECT * FROM workspaces').iterate() as Iterable<Record<string,unknown>>){const w=decode<C.WorkspaceRecord>(TABLES.workspaces,row);requireStore(w.worktreePath===path.join(roots.workspaces,w.workspaceId)&&w.branchRef==='prd/'+(db.prepare('SELECT prd_id FROM prds WHERE workspace_id=?').get(w.workspaceId) as {prd_id:string}|undefined)?.prd_id);}
+  for(const row of db.prepare('SELECT * FROM workspaces').iterate() as Iterable<Record<string,unknown>>){const w=decode<C.WorkspaceRecord>(TABLES.workspaces,row),p=db.prepare('SELECT prd_id,initial_idea FROM prds WHERE workspace_id=?').get(w.workspaceId) as {prd_id:C.PrdId;initial_idea:string}|undefined;requireStore(p&&w.worktreePath===path.join(roots.workspaces,w.workspaceId)&&(w.branchRef==='prd/'+p.prd_id||w.branchRef===prdBranchName(p.initial_idea,p.prd_id)));}
   for(const row of db.prepare('SELECT s.*,w.worktree_path FROM sessions s JOIN prds p ON p.prd_id=s.prd_id JOIN workspaces w ON w.workspace_id=p.workspace_id').iterate() as Iterable<Record<string,unknown>>){const s=decode<C.SessionRecord>(TABLES.sessions,row);requireStore(s.appSessionDir===path.join(roots.sessions,s.prdId)&&contained(s.appSessionDir,s.exactPath)&&path.dirname(s.exactPath)===s.appSessionDir&&s.expectedCwd===row.worktree_path);}
   for(const row of db.prepare('SELECT * FROM operations WHERE recovery_directory IS NOT NULL').iterate() as Iterable<Record<string,unknown>>){const o=decode<C.OperationRecord>(TABLES.operations,row);requireStore(o.recoveryDirectory===path.join(roots.recovery,o.operationId));}
   for(const row of db.prepare('SELECT * FROM save_recoveries').iterate() as Iterable<Record<string,unknown>>){const r=decode<C.SaveRecoveryRecord>(TABLES.save_recoveries,row),directory=path.join(roots.recovery,r.operationId);requireStore(contained(directory,r.preimagePath)&&contained(directory,r.intendedPath)&&r.preimagePath!==r.intendedPath);}
