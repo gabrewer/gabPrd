@@ -3,7 +3,8 @@ import { fileURLToPath } from 'node:url';
 import { readFileSync, existsSync, lstatSync, realpathSync, readdirSync } from 'node:fs';
 import { listPackage, statFile, extractFile } from '@electron/asar';
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const packageRoot = path.join(root, 'out/gabPrd-win32-x64');
+// An explicit built folder permits verification without overwriting a running build.
+const packageRoot = process.argv[2] ? path.resolve(process.argv[2]) : path.join(root, 'out/gabPrd-win32-x64');
 const archive = path.join(packageRoot, 'resources/app.asar');
 const unpacked = archive + '.unpacked';
 function assert(condition) { if (!condition) throw new Error('Packaged bootstrap asset/production-closure or exclusion check failed.'); }

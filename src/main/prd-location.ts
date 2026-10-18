@@ -38,6 +38,8 @@ export async function discoverPrdConventions(workspace:C.WorkspaceRecord):Promis
     if(!/\b(?:prds?|design\s+documents?|product\s+requirements?)\b/i.test(line))continue;
     for(const match of line.matchAll(/`([^`]+)`/g)){
      const raw=match[1]!;if(!raw.includes('/')&&!/^(?:requirements|prds?|design|specifications)\/?$/i.test(raw)&&!/(?:\bin|\bunder|\bfolder|\bdirectory|:)\s*$/i.test(line.slice(0,match.index)))continue;
+     // References to PRD files are context, not destination directories (including future files).
+     if(/\.(?:md|markdown|mdx)(?:#[^/]*)?$/i.test(raw))continue;
      const relative=raw.replace(/\/$/,'');verifyFutureDirectory(root,relative);folders.add(relative);
     }
    }
