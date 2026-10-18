@@ -1,6 +1,7 @@
 'use strict';
 const path = require('node:path');
 const fs = require('node:fs/promises');
+const MinimizerPlugin = require('minimizer-webpack-plugin');
 // Fixed source assets only: never resolve a renderer-supplied URL or add a dev server.
 class FixedShellAssets {
   apply(compiler) {
@@ -34,5 +35,13 @@ module.exports = {
   }] },
   resolve: { extensions: ['.ts', '.tsx', '.js'] },
   plugins: [new FixedShellAssets()],
-  optimization: { splitChunks: false, runtimeChunk: false, minimize: false },
+  optimization: {
+    splitChunks: false, runtimeChunk: false, minimize: true,
+    // Strip dependency source-map directives without changing names/optimizing code.
+    // Keep legal comments inline: no extra map or LICENSE asset crosses the allowlist.
+    minimizer: [new MinimizerPlugin({
+      extractComments: false,
+      terserOptions: { compress: false, mangle: false, format: { comments: 'some' } },
+    })],
+  },
 };
