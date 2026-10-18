@@ -58,6 +58,12 @@ export class PrdWorkspace implements PrdWorkspacePort {
   const cwd=repository.checkoutRoot,head=await this.git(cwd,['rev-parse','--verify','HEAD^{commit}']),branch=await this.git(cwd,['rev-parse','--symbolic-full-name','HEAD']),indexRaw=await this.git(cwd,['rev-parse','--path-format=absolute','--git-path','index']);requireStore(/^[a-f0-9]{40}$/.test(head),'LINK_CHANGED');const indexPath=indexRaw.replaceAll('/',path.sep);requireStore(path.isAbsolute(indexPath)&&path.resolve(indexPath)===indexPath,'LINK_CHANGED');
   return {head:head as C.GitSha,branch:branch==='HEAD'?null:branch,index:fileHash(indexPath),tracked:hash(await this.git(cwd,['diff','--binary','--no-ext-diff','--no-textconv','HEAD','--'])),status:hash(await this.git(cwd,['status','--porcelain=v1','--untracked-files=all']))};
  }
+ async plan(repository:C.RepositoryRecord,prdId:C.PrdId,workspaceId:C.WorkspaceId,operationId:C.OperationId):Promise<PortResult<C.WorkspaceRecord>>{
+  try{this.read(tx=>equal(TABLES.repositories,tx.repository(repository.repositoryId),repository));await this.verifyRepository(repository);const snapshot=await this.original(repository);
+   const record:C.WorkspaceRecord={workspaceId,repositoryId:repository.repositoryId,worktreePath:path.join(this.roots.workspaces,workspaceId) as C.CanonicalPath,gitDir:null,worktreeIdentity:null,gitDirIdentity:null,originalHeadSha:snapshot.head,originalBranchRef:snapshot.branch,originalIndexHash:snapshot.index as C.WorkspaceRecord['originalIndexHash'],originalTrackedChangesHash:snapshot.tracked as C.WorkspaceRecord['originalTrackedChangesHash'],branchRef:'prd/'+prdId,baseRef:'refs/remotes/origin/main',baseSha:null,creationOperationId:operationId,state:'planned'};
+   encode(TABLES.workspaces,record);return success(record);
+  }catch(error){return fixedFailure(error);}
+ }
  private async preserve(repository:C.RepositoryRecord,before:OriginalSnapshot){requireStore(JSON.stringify(await this.original(repository))===JSON.stringify(before),'LINK_CHANGED');await this.verifyRepository(repository);}
  private load(repository:C.RepositoryRecord,workspace:C.WorkspaceRecord,operation?:C.OperationRecord){
   encode(TABLES.repositories,repository);encode(TABLES.workspaces,workspace);if(operation)encode(TABLES.operations,operation);

@@ -25,6 +25,9 @@ export interface StoreTransaction {
   document(id: DocumentId): DocumentRecord | null;
   session(prdId: PrdId): SessionRecord | null;
   operation(id: OperationId): OperationRecord | null;
+  operationByRequest(id: RequestId): OperationRecord | null;
+  /** Most recently admitted operation for the PRD, including finished work after restart. */
+  latestOperation(id: PrdId): OperationRecord | null;
   conventions(workspaceId: WorkspaceId): readonly ConventionRecord[];
   candidates(prdId: PrdId): readonly CandidateRecord[];
   skill(prdId: PrdId): SkillBinding | null;
@@ -63,6 +66,8 @@ export interface WorkspaceStepResult {
 }
 export interface PrdWorkspacePort {
   register(selectedCheckout: CanonicalPath): Promise<PortResult<RepositoryRecord>>;
+  /** Read-only original-checkout snapshot, before durable provisioning admission. */
+  plan(repository: RepositoryRecord, prdId: PrdId, workspaceId: WorkspaceId, operationId: OperationId): Promise<PortResult<WorkspaceRecord>>;
   /** Intent is already durable. Each step verifies previous links and records observed effects. */
   provision(repository: RepositoryRecord, workspace: WorkspaceRecord, operation: OperationRecord): Promise<PortResult<WorkspaceStepResult>>;
   retry(repository: RepositoryRecord, workspace: WorkspaceRecord, operation: OperationRecord): Promise<PortResult<WorkspaceStepResult>>;
