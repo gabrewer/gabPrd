@@ -114,6 +114,8 @@ export interface PrdSummary {
 export interface PrdSnapshot {
   readonly prd: PrdSummary; readonly store: StoreHealth; readonly operation: OperationView | null;
   readonly pendingQuestion: UiQuestion | null; readonly sequence: EventSequence;
+  /** Display-only retained workspace association, never filesystem/Git command authority. */
+  readonly workspaceLocation: Readonly<{worktreePath: string; branchName: string}> | null;
   readonly draftLocation: Readonly<{ state: 'unresolved'; choices: readonly ConventionView[] }>
     | Readonly<{ state: 'resolved'; convention: ConventionView; relativePath: RelativeMarkdownPath }>;
   readonly editorAccess: 'editable' | 'foregroundReadOnly' | 'recoveryReadOnly';

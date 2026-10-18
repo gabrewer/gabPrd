@@ -299,6 +299,10 @@ For newly created PRDs, the writer approved `prd/<idea-slug>-<first8-of-prdUUID>
 
 Persist the exact branch association through retries, reopen and title changes. Existing branches, worktrees and documents remain untouched; there is no migration or automatic rename. This approved change supersedes the older UUID-only creation rule below and does not change filenames, worktree paths or publication approval.
 
+### Approved active PRD location display
+
+After branch/worktree creation, show the active PRD worktree folder and its persisted branch visibly instead of presenting the selected source checkout as its working location. Keep that location visible through folder confirmation, brainstorm, draft review and reopen, including legacy branches. Before creation or when setup cannot establish a workspace, show preparation/unavailability rather than a misleading source location. The selected/default repository remains the separate starting point for new PRDs; this display change does not move documents, rename branches or publish anything.
+
 ## 10. Milestones
 
 1. **Workspace and conversation:** remembered repository selection, isolated PRD branch/worktree creation, and interactive Pi brainstorming.

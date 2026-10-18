@@ -148,6 +148,12 @@ button:focus-visible {
 .empty-prds p { max-width:32rem; margin:0.75rem auto 0; }
 
 /* Interview first; real document after generation. */
+.active-workspace-location { min-width:0; margin:0.5rem 0; padding:0.75rem 1rem; border:1px solid #c8d5bd; border-radius:0.45rem; background:#fffefa; }
+.active-workspace-location h2 { margin:0 0 0.5rem; font-size:0.85rem; }
+.active-workspace-location dl { margin:0; }
+.active-workspace-location dl > div { min-width:0; margin-top:0.4rem; }
+.active-workspace-location dt { font-size:0.7rem; color:#65785d; }
+.active-workspace-location dd { margin:0.1rem 0 0; }
 .prd-location { margin:0.5rem 0 1rem; color:#65785d; font-size:0.75rem; }
 .prd-location summary { padding:0.3rem 0; cursor:pointer; font-weight:500; }
 .prd-location[open] { padding:0.75rem 1rem; border:1px solid #c8d5bd; border-radius:0.45rem; background:#fffefa; }

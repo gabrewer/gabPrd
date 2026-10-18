@@ -21,6 +21,7 @@ const question = {questionId, title:'Choose', deadline:null, kind:'select', opti
 const snapshot = {prd:{prdId, workspaceId, repository, version, displayName:'Idea', creationDate:'2026-10-16',
   lifecycle:'draftAvailable',workspaceState:'ready',document,session:{state:'materialized',sessionId,lastPersistedEntryId:'entry-1'},publication:'unavailable'},
   store:{state:'ready'},operation,pendingQuestion:null,sequence:1,
+  workspaceLocation:{worktreePath:'X:/owned/appdata/workspaces/'+workspaceId,branchName:'prd/idea-00000000'},
   draftLocation:{state:'resolved',convention,relativePath:body.relativePath},editorAccess:'foregroundReadOnly',externalWriters:'unknown'};
 const page = {items:[],nextCursor:null,coverage:'complete'};
 const candidate = {candidateId,relativePath:body.relativePath,conventionId,revision,byteLength:6,observedAt:now,previewText:'# Idea',previewStatus:'complete'};
@@ -102,6 +103,17 @@ for (const [n,e] of piEvents.entries()) test(`private event ${e.type} variant ${
   assert.equal(parsePiEvent({...input,operationId:id(92)},correlation),undefined);
 });
 
+const parsedWorkspace=(value:object)=>parsePrdResult(result('ReconcilePrd',value),req('ReconcilePrd') as PrdRequest);
+test('workspace location is exact display data for created worktrees and never source repository authority',()=>{
+ const legacy={...snapshot,workspaceLocation:{...snapshot.workspaceLocation,branchName:'prd/'+prdId}};assert.deepEqual(parsedWorkspace(legacy),result('ReconcilePrd',legacy));
+ for(const workspaceState of ['worktreeCreated','ready']){const value={...snapshot,prd:{...snapshot.prd,workspaceState}};assert.deepEqual(parsedWorkspace(value),result('ReconcilePrd',value));assert.equal(parsedWorkspace({...value,workspaceLocation:null}),undefined);}
+ for(const workspaceState of ['planned','baseFetched','branchCreated','recoveryRequired']){const value={...snapshot,prd:{...snapshot.prd,workspaceState,lifecycle:'createPending',document:{state:'notRegistered'},session:{state:'notAllocated'}},operation:null,workspaceLocation:null,draftLocation:{state:'unresolved',choices:[]},editorAccess:'recoveryReadOnly'};assert.deepEqual(parsedWorkspace(value),result('ReconcilePrd',value));assert.equal(parsedWorkspace({...value,workspaceLocation:snapshot.workspaceLocation}),undefined);}
+});
+test('workspace location rejects missing fields, extras, unsafe paths, oversized or non-PRD branches',()=>{
+ assert.ok(parsedWorkspace(snapshot));
+ for(const workspaceLocation of [{worktreePath:'../outside',branchName:'prd/idea-00000000'},{...snapshot.workspaceLocation,branchName:'main'},{...snapshot.workspaceLocation,branchName:'prd/a'.repeat(L.displayPathBytes)},{...snapshot.workspaceLocation,extra:secret},{worktreePath:snapshot.workspaceLocation.worktreePath}])assert.equal(parsedWorkspace({...snapshot,workspaceLocation}),undefined);
+ const missing={...snapshot} as Partial<typeof snapshot>;delete missing.workspaceLocation;assert.equal(parsedWorkspace(missing),undefined);
+});
 test('all requests reject root and nested getters, symbols, prototypes, nonenumerables and missing/extra keys without invocation or mutation', () => {
   let touched=0;
   for (const command of Object.keys(requests)) {

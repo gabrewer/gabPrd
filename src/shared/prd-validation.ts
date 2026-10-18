@@ -143,9 +143,11 @@ const summary = refine(object({
 }),v=>v.lifecycle!=='draftAvailable' || v.document.state!=='notRegistered');
 const snapshot = refine(object({
   prd:summary,store:health,operation:nullable(operation),pendingQuestion:nullable(question),sequence:integer(),
+  workspaceLocation:nullable(object({worktreePath:canonicalPath,branchName:refine(text(1024,false),v=>/^prd\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(v))})),
   draftLocation:tagged('state',{unresolved:{choices:array(convention,L.conventionItems,'conventionId')},resolved:{convention,relativePath:markdownPath}}),
   editorAccess:literal('editable','foregroundReadOnly','recoveryReadOnly'),externalWriters:literal('unknown'),
 }),v=>{
+  if ((v.prd.workspaceState==='worktreeCreated'||v.prd.workspaceState==='ready') !== (v.workspaceLocation!==null)) return false;
   if (v.operation && (v.operation.prdId!==v.prd.prdId || (v.operation.sessionId!==null && v.operation.sessionId!==v.prd.session.sessionId))) return false;
   if (v.pendingQuestion && (!v.operation || v.operation.phase!=='awaitingUiResponse')) return false;
   if (v.operation?.phase==='awaitingUiResponse' && !v.pendingQuestion) return false;
