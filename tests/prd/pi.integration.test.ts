@@ -9,6 +9,7 @@ import {randomUUID} from 'node:crypto';
 import {mkdirSync,mkdtempSync,writeFileSync,readFileSync,realpathSync,existsSync,renameSync,unlinkSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import type * as C from '../../src/shared/prd-contracts';
+import {PRD_LIMITS as L} from '../../src/shared/prd-contracts';
 import type {PortResult} from '../../src/main/prd-ports';
 import {PrdSession} from '../../src/pi-utility/prd-session';
 import {inspectPrdSession,readPrdHistory} from '../../src/pi-utility/prd-history';
@@ -71,6 +72,21 @@ test('P05 actual normal configured SDK allocates before prompt and streams/persi
  error(await c.runtime.accept(c.command({type:'pi.ack',sessionId:null,throughSequence:ready.sequence})),'LINK_CHANGED');assert.equal(c.requests.length,0);
  value(await c.prompt(ready));assert.equal((await c.settled()).outcome,'succeeded');assert.ok(existsSync(record.exactPath));const request=JSON.stringify(c.requests[0]);assert.ok(request.includes('ORIGINAL_SKILL_SENTINEL $1 ${HOME}'));assert.ok(request.includes('A writer idea containing $1, ${HOME}, /skill:other and <literal>.'));assert.equal(request.split('ORIGINAL_SKILL_SENTINEL').length-1,1);assert.ok(request.includes(c.target));
  assert.ok(c.events.some(e=>e.type==='pi.projection'&&e.event.type==='textDelta'));const finalized=c.events.find(e=>e.type==='pi.projection'&&e.event.type==='textFinalized');assert.ok(finalized);if(finalized.type==='pi.projection'&&finalized.event.type==='textFinalized')assert.equal(finalized.event.durability,'unconfirmed');assert.ok(c.events.some(e=>e.type==='pi.projection'&&e.event.type==='historyPersisted'));assert.ok(c.events.every((e,i)=>e.sequence===i+1));
+});
+test('P05 configured extension statuses and clears stay outside model chat and saved transcript',async t=>{
+ const c=await fixture(t,{hook:`export default function(pi){pi.on('session_start',(_e,ctx)=>{ctx.ui.setStatus('gabprd-sprint','Working');ctx.ui.setStatus('gabprd-sprint',undefined);ctx.ui.setStatus('sprint-continuity',undefined);ctx.ui.notify('Extension notice');});}`}),ready=await c.ready();
+ const updates=c.events.flatMap(e=>e.type==='pi.projection'&&e.event.type==='extensionUi'?[e.event.update]:[]);assert.deepEqual(updates,[{kind:'status',key:'gabprd-sprint',text:'Working'},{kind:'status',key:'gabprd-sprint',text:null},{kind:'status',key:'sprint-continuity',text:null},{kind:'notice',level:'info',text:'Extension notice'}]);assert.equal(c.requests.length,0);assert.equal(c.events.some(e=>e.type==='pi.projection'&&e.event.type==='textFinalized'),false);
+ value(await c.prompt(ready));assert.equal((await c.settled()).outcome,'succeeded');const history=value(readPrdHistory(value(inspectPrdSession(allocation(c.events))).record,null));assert.ok(history.items.every(i=>!i.text.startsWith('Status ')&&i.text!=='Extension notice'));
+});
+test('P05 writer echo precedes held provider response and bounds quote-heavy input without changing the original',async t=>{
+ const c=await fixture(t,{mode:'hold'}),ready=await c.ready(),original='"'.repeat(L.inputBytes);value(await c.prompt(ready,original));await until(()=>c.requests.length?true:undefined);
+ const echo=c.events.find((e):e is Extract<C.PiUtilityEvent,{type:'pi.projection'}>=>e.type==='pi.projection'&&e.event.type==='writerMessage');assert.ok(echo,'SDK must project writer input before provider responds');if(echo.event.type!=='writerMessage')throw new Error();assert.equal(echo.event.text,original.slice(0,L.deltaBytes));assert.equal(echo.event.textStatus,'truncated');assert.equal(echo.event.durability,'unconfirmed');assert.ok(Buffer.byteLength(JSON.stringify(echo))<L.eventBytes);assert.equal(c.events.some(e=>e.type==='pi.settled'),false);assert.ok(JSON.stringify(c.requests[0]).includes(JSON.stringify(original).slice(1,-1)));
+ value(await c.runtime.accept(c.command({type:'pi.abort',sessionId:ready.sessionId})));assert.equal((await c.settled()).outcome,'cancelled');
+});
+test('P05 identical writer turns retain distinct live IDs that exactly match saved history',async t=>{
+ const c=await fixture(t),ready=await c.ready(),text='The same writer reply, twice.';
+ for(let i=0;i<2;i++){if(i)c.nextGeneration();const offset=c.events.length;value(await c.prompt(ready,text));assert.equal((await c.settled(offset)).outcome,'succeeded');}
+ const echoes=c.events.flatMap(e=>e.type==='pi.projection'&&e.event.type==='writerMessage'?[e.event]:[]);assert.equal(echoes.length,2);assert.notEqual(echoes[0]!.messageId,echoes[1]!.messageId);assert.ok(echoes.every(e=>e.text===text));const history=value(readPrdHistory(value(inspectPrdSession(allocation(c.events))).record,null));assert.deepEqual(history.items.filter(i=>i.role==='writer').map(i=>i.messageId),echoes.map(e=>e.messageId));
 });
 test('P05 precedence uses normal project configured skill, never an original-checkout overlay/replacement',async t=>{
  const c=await fixture(t,{projectSkill:true,projectSettings:{skills:['./preferred/brainstorm']}});file(path.join(c.cwd,'.pi/preferred/brainstorm/SKILL.md'),skill.replace('ORIGINAL_SKILL_SENTINEL','CONFIGURED_PROJECT_WINNER'));file(path.join(c.agent,'skills/brainstorm/SKILL.md'),skill.replace('ORIGINAL_SKILL_SENTINEL','USER_LOSER'));

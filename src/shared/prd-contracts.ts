@@ -233,8 +233,14 @@ export interface EventContext {
   readonly operationId: OperationId | null; readonly generationId: GenerationId | null;
   readonly sequence: EventSequence; readonly version: RecordVersion;
 }
+export type ExtensionUiUpdate = Readonly<{kind:'status'|'widget';key:string;text:string|null}>
+  | Readonly<{kind:'working'|'thinking';text:string|null}>
+  | Readonly<{kind:'title';text:string}>
+  | Readonly<{kind:'notice';level:'info'|'warning';text:string}>;
 export type PrdEventBody = Readonly<{ type: 'snapshot'; snapshot: PrdSnapshot }>
+  | Readonly<{ type: 'extensionUi'; update: ExtensionUiUpdate }>
   | Readonly<{ type: 'operation'; operation: OperationView }>
+  | Readonly<{ type: 'writerMessage'; messageId: MessageId; text: string; textStatus: 'complete' | 'truncated'; durability: 'unconfirmed' }>
   | Readonly<{ type: 'textDelta'; messageId: MessageId; delta: string }>
   | Readonly<{ type: 'textFinalized'; messageId: MessageId; text: string; textStatus: 'complete' | 'truncated'; durability: 'unconfirmed' }>
   | Readonly<{ type: 'historyPersisted'; lastPersistedEntryId: HistoryEntryId }>

@@ -51,7 +51,7 @@ const privateContext = {requestId,prdId,operationId,generationId};
 const correlation = privateContext as unknown as PiCorrelation;
 const event = (fields: object) => ({contractVersion:1,subscriptionId,...context,sequence:1,version,...fields});
 const events = [
-  {type:'snapshot',snapshot},{type:'operation',operation},{type:'textDelta',messageId:'msg-1',delta:'hello'},
+  {type:'snapshot',snapshot},{type:'operation',operation},{type:'extensionUi',update:{kind:'status',key:'sprint-continuity',text:null}},{type:'writerMessage',messageId:'writer-1',text:'My submitted idea',textStatus:'complete',durability:'unconfirmed'},{type:'textDelta',messageId:'msg-1',delta:'hello'},
   {type:'textFinalized',messageId:'msg-1',text:'hello',textStatus:'complete',durability:'unconfirmed'},
   {type:'historyPersisted',lastPersistedEntryId:'entry-1'},{type:'uiQuestion',question},
   {type:'uiQuestionDismissed',questionId,reason:'answered'},{type:'documentChanged',document,version,cause:'appSave'},
@@ -103,6 +103,10 @@ for (const [n,e] of piEvents.entries()) test(`private event ${e.type} variant ${
   assert.equal(parsePiEvent({...input,operationId:id(92)},correlation),undefined);
 });
 
+test('writer messages are correlated, bounded, exact and never claim saved durability',()=>{
+ const body={type:'writerMessage',messageId:'writer-1',text:'Original $1 ${HOME}',textStatus:'complete',durability:'unconfirmed'};assert.deepEqual(parsePrdEvent(event(body)),event(body));
+ for(const change of [{durability:'saved'},{text:'a'.repeat(L.deltaBytes+1)},{role:'writer'},{requestId:null},{sessionId:null},{operationId:null},{generationId:null}])assert.equal(parsePrdEvent(event({...body,...change})),undefined);
+});
 const parsedWorkspace=(value:object)=>parsePrdResult(result('ReconcilePrd',value),req('ReconcilePrd') as PrdRequest);
 test('workspace location is exact display data for created worktrees and never source repository authority',()=>{
  const legacy={...snapshot,workspaceLocation:{...snapshot.workspaceLocation,branchName:'prd/'+prdId}};assert.deepEqual(parsedWorkspace(legacy),result('ReconcilePrd',legacy));

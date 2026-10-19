@@ -1,7 +1,7 @@
 /** Async desktop dialogs. No guessed confirm value or silent terminal no-op. */
 import {randomUUID} from 'node:crypto';
 import type {ExtensionUIContext,ExtensionUIDialogOptions} from '@earendil-works/pi-coding-agent';
-import type {PrdEventBody,PrdErrorCode,QuestionId,UiAnswer,UiQuestion,IsoInstant,OptionId,MessageId} from '../shared/prd-contracts';
+import type {PrdEventBody,PrdErrorCode,QuestionId,UiAnswer,UiQuestion,IsoInstant,OptionId} from '../shared/prd-contracts';
 import {PRD_LIMITS as L} from '../shared/prd-contracts';
 import type {PortResult} from '../main/prd-ports';
 import {storeFailure,requireStore,StoreFault} from '../main/prd-schema';
@@ -12,7 +12,6 @@ export function createPrdDialogs(emit:(event:PrdEventBody)=>void,stop:(code:PrdE
  function unsupported():never{stop('CONFIG_INCOMPATIBLE');throw new StoreFault('CONFIG_INCOMPATIBLE');}
  function text(value:unknown,max=L.uiTextBytes):string{if(typeof value!=='string'||value.includes('\0')||Buffer.byteLength(value)>max)unsupported();return value;}
  function publish(body:PrdEventBody):void{if(Buffer.byteLength(JSON.stringify(body))>L.eventBytes-2048)unsupported();emit(body);}
- function projection(label:string,value:unknown){const body=text(value);publish({type:'textFinalized',messageId:('ui:'+randomUUID()) as MessageId,text:text(label+': '+body),textStatus:'complete',durability:'unconfirmed'});}
  function ask(question:UiQuestion,opts?:ExtensionUIDialogOptions):Promise<string|boolean|undefined>{
   if(pending.size>0)unsupported();const timeout=opts?.timeout;if(timeout!==undefined&&(!Number.isSafeInteger(timeout)||timeout<0||timeout>2147483647))unsupported();
   return new Promise((resolve,reject)=>{
@@ -34,12 +33,12 @@ export function createPrdDialogs(emit:(event:PrdEventBody)=>void,stop:(code:PrdE
   confirm:async(title,message,opts)=>await ask({...question(title,opts),kind:'confirm',message:text(message)},opts) as boolean,
   input:async(title,placeholder,opts)=>await ask({...question(title,opts),kind:'input',placeholder:placeholder===undefined?null:text(placeholder)},opts) as string|undefined,
   editor:async(title,prefill)=>await ask({...question(title),kind:'editor',prefill:prefill===undefined?'':text(prefill)}) as string|undefined,
-  notify:(message,type)=>{if(type==='error')unsupported();projection(type==='warning'?'Warning':'Notice',message);},
-  setStatus:(key,value)=>projection('Status '+text(key,256),value===undefined?'Cleared':value),
-  setWorkingMessage:message=>projection('Working',message===undefined?'Default status restored':message),
-  setHiddenThinkingLabel:label=>projection('Thinking',label===undefined?'Default label restored':label),
-  setWidget:(key,content)=>{if(typeof content==='function')unsupported();if(content===undefined){projection('Widget '+text(key,256),'Cleared');return;}if(!Array.isArray(content)||content.length>32)unsupported();projection('Widget '+text(key,256),content.map(line=>text(line)).join('\n'));},
-  setTitle:title=>projection('Title',title),
+  notify:(message,type)=>{if(type==='error')unsupported();publish({type:'extensionUi',update:{kind:'notice',level:type==='warning'?'warning':'info',text:text(message)}});},
+  setStatus:(key,value)=>publish({type:'extensionUi',update:{kind:'status',key:text(key,256),text:value===undefined?null:text(value)}}),
+  setWorkingMessage:message=>publish({type:'extensionUi',update:{kind:'working',text:message===undefined?null:text(message)}}),
+  setHiddenThinkingLabel:label=>publish({type:'extensionUi',update:{kind:'thinking',text:label===undefined?null:text(label)}}),
+  setWidget:(key,content)=>{if(typeof content==='function')unsupported();if(content===undefined){publish({type:'extensionUi',update:{kind:'widget',key:text(key,256),text:null}});return;}if(!Array.isArray(content)||content.length>32)unsupported();publish({type:'extensionUi',update:{kind:'widget',key:text(key,256),text:text(content.map(line=>text(line)).join('\n'))}});},
+  setTitle:title=>publish({type:'extensionUi',update:{kind:'title',text:text(title)}}),
   // These need terminal/editor/theme state, not a text notification claiming parity.
   onTerminalInput:unsupported,setWorkingVisible:unsupported,setWorkingIndicator:unsupported,setFooter:unsupported,setHeader:unsupported,custom:unsupported,pasteToEditor:unsupported,setEditorText:unsupported,getEditorText:unsupported,addAutocompleteProvider:unsupported,setEditorComponent:unsupported,getEditorComponent:unsupported,
   theme:new Proxy({} as ExtensionUIContext['theme'],{get:unsupported}),getAllThemes:unsupported,getTheme:unsupported,setTheme:unsupported,getToolsExpanded:unsupported,setToolsExpanded:unsupported,

@@ -197,8 +197,13 @@ const replySchemas: Record<string,Schema> = {
   CancelOperation:refine(object({outcome:literal('cancelRequested','alreadyFinished'),operation}),v=>v.outcome==='alreadyFinished' ? v.operation.phase==='finished' : v.operation.phase!=='finished'),
   ReconcilePrd:snapshot,RetryWorkspaceSetup:operationReply,
 };
+const extensionUi=tagged('kind',{
+ status:{key:text(256,false),text:nullable(text(L.uiTextBytes))},widget:{key:text(256,false),text:nullable(text(L.uiTextBytes))},
+ working:{text:nullable(text(L.uiTextBytes))},thinking:{text:nullable(text(L.uiTextBytes))},title:{text:text(L.uiTextBytes)},notice:{level:literal('info','warning'),text:text(L.uiTextBytes)},
+});
 const eventShapes: Record<string,Record<string,Schema>> = {
-  snapshot:{snapshot},operation:{operation},textDelta:{messageId:opaque,delta:text(L.deltaBytes)},
+  extensionUi:{update:extensionUi},
+  snapshot:{snapshot},operation:{operation},writerMessage:{messageId:opaque,text:text(L.deltaBytes),textStatus:literal('complete','truncated'),durability:literal('unconfirmed')},textDelta:{messageId:opaque,delta:text(L.deltaBytes)},
   textFinalized:{messageId:opaque,text:text(L.historyTextBytes),textStatus:literal('complete','truncated'),durability:literal('unconfirmed')},
   historyPersisted:{lastPersistedEntryId:opaque},uiQuestion:{question},uiQuestionDismissed:{questionId:uuid,reason:literal('answered','cancelled','expired','operationEnded')},
   documentChanged:{document:documentView,cause:literal('appSave','filesystemObserved','reconciliation')},
@@ -206,7 +211,7 @@ const eventShapes: Record<string,Record<string,Schema>> = {
 };
 const eventContext = {contractVersion:literal(1),subscriptionId:uuid,requestId:nullable(uuid),prdId:uuid,sessionId:nullable(uuid),operationId:nullable(uuid),generationId:nullable(uuid),sequence:integer(),version:uuid};
 const fullEvent = refine(tagged('type',eventShapes,eventContext),v=>{
-  if (['textDelta','textFinalized','historyPersisted','uiQuestion','uiQuestionDismissed'].includes(v.type)
+  if (['extensionUi','writerMessage','textDelta','textFinalized','historyPersisted','uiQuestion','uiQuestionDismissed'].includes(v.type)
     && [v.requestId,v.sessionId,v.operationId,v.generationId].some(x=>x===null)) return false;
   if (v.type==='operation' && (v.operation.prdId!==v.prdId || v.operation.operationId!==v.operationId || v.operation.requestId!==v.requestId || v.operation.sessionId!==v.sessionId || v.operation.generationId!==v.generationId)) return false;
   if (v.type==='snapshot') {
