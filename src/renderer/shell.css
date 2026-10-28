@@ -70,8 +70,8 @@ button:focus-visible {
 }
 
 /* Product workspace. Diagnostic-fixture styles above remain independently scoped. */
-.workspace-shell { --ui-ink:#283d31; --ui-muted:#5d705f; --ui-border:#d7dfd0; --ui-accent:#285d47; display:grid; grid-template-columns:188px minmax(0,1fr); min-height:100dvh; background:#f3f3ed; color:var(--ui-ink); font-family:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif; }
-.workspace-sidebar { display:flex; flex-direction:column; align-items:stretch; gap:0; padding:2rem 1rem 1.25rem; border:0; background:#20352d; color:#f6f9f0; min-height:100dvh; }
+.workspace-shell { --ui-ink:#283d31; --ui-muted:#5d705f; --ui-border:#d7dfd0; --ui-accent:#285d47; display:grid; grid-template-columns:188px minmax(0,1fr); grid-template-rows:minmax(0,1fr); height:100dvh; overflow:hidden; background:#f3f3ed; color:var(--ui-ink); font-family:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif; }
+.workspace-sidebar { display:flex; flex-direction:column; align-items:stretch; gap:0; padding:2rem 1rem 1.25rem; border:0; background:#20352d; color:#f6f9f0; min-height:0; overflow:auto; }
 .workspace-brand { display:flex; align-items:center; gap:0.65rem; font-size:1rem; letter-spacing:-0.025em; font-weight:650; margin:0 0.35rem 2.2rem; white-space:nowrap; }
 .brand-mark { display:flex; align-items:center; width:1.7rem; height:2rem; color:#d8e8bd; }
 .brand-mark svg { width:100%; height:100%; stroke:currentColor; fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
@@ -83,7 +83,15 @@ button:focus-visible {
 .workspace-sidebar .recent-prd { display:block; width:100%; min-height:2.5rem; padding:0.6rem 0.75rem; margin:0 0 0.25rem; text-align:left; border:0; border-radius:0.3rem; background:transparent; color:#cbdac9; font:400 0.75rem/1.45 "Segoe UI",sans-serif; overflow-wrap:anywhere; }
 .workspace-sidebar .recent-prd:hover { background:#344d3d; }
 .sidebar-footer { margin:auto 0 0; padding:1.25rem 0.6rem 0; border-top:1px solid #4c6550; color:#b4c8af; font-size:0.65rem; line-height:1.7; }
-.prd-workspace { width:100%; max-width:none; min-width:0; margin:0; padding:1.75rem 2rem; overflow-wrap:anywhere; }
+.prd-workspace { width:100%; max-width:none; min-width:0; min-height:0; margin:0; padding:1.75rem 2rem; overflow:auto; overflow-wrap:anywhere; }
+/* The shell owns the viewport; tall metadata can scroll main without clipping controls. */
+.workspace-view-document .prd-workspace { display:flex; flex-direction:column; }
+.workspace-view-document .prd-workspace > * { flex-shrink:0; min-width:0; }
+.workspace-view-document .prd-workbench { display:flex; flex-direction:column; width:100%; flex:1 0 18rem; min-height:18rem; }
+.workspace-view-document .workbench-panes { flex:1; min-height:0; grid-template-rows:minmax(0,1fr); align-items:stretch; }
+/* Position live regions inside their scroll owner, not at the page's static position. */
+.workspace-shell .workbench-conversation,.workspace-shell .workbench-document { position:relative; min-height:0; max-height:none; overflow:auto; overscroll-behavior:contain; }
+.workspace-shell .conversation-pane { min-height:100%; }
 .workspace-header { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin:0 0 1.2rem; }
 .workspace-header h1 { margin:0; font-size:1.4rem; line-height:1.35; letter-spacing:-0.025em; font-weight:650; }
 .workspace-header h1:focus { outline:none; }
@@ -224,9 +232,10 @@ button:focus-visible {
 }
 @media(max-width:44rem) {
  .workspace-shell { display:flex; flex-direction:column; }
- .workspace-sidebar { min-height:0; padding:0.8rem 1rem; display:flex; flex-direction:row; justify-content:space-between; align-items:center; gap:1rem; }
+ .workspace-sidebar { min-height:0; max-height:40dvh; flex-shrink:0; padding:0.8rem 1rem; display:flex; flex-direction:row; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:1rem; }
  .workspace-brand { margin:0; }
- .workspace-sidebar nav { display:flex; gap:0.35rem; }
+ .workspace-sidebar nav { display:flex; flex-wrap:wrap; gap:0.35rem; }
+ .workspace-shell > .prd-workspace { flex:1; }
  .workspace-sidebar .nav-item { min-height:2.25rem; padding:0.45rem 0.65rem; font-size:0.7rem; }
  .sidebar-footer,.sidebar-recents { display:none; }
  .prd-workspace { padding:1.2rem; }

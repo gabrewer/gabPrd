@@ -12,8 +12,8 @@ export default function PrdWorkbench({hasVerifiedDraft,documentNeedsAttention,co
    <div className="workbench-view-controls" role="group" aria-label="Workspace emphasis"><button type="button" className="secondary-action" aria-pressed={view.primary==='conversation'} onClick={()=>setView(old=>({...old,primary:'conversation'}))}>Focus conversation</button><button type="button" className="secondary-action" disabled={!showDocument} aria-pressed={view.primary==='document'} onClick={()=>setView(old=>({...old,primary:'document'}))}>Focus PRD</button></div>
   </header>
   <div className={'workbench-panes'+(!showDocument?' conversation-only':'')}>
-   <div className="workbench-conversation">{conversation}</div>
-   <div className="workbench-document" hidden={!showDocument}>{document}</div>
+   <div className="workbench-conversation" role="region" aria-label="Conversation scroll area" tabIndex={0}>{conversation}</div>
+   <div className="workbench-document" role="region" aria-label="PRD scroll area" tabIndex={0} hidden={!showDocument}>{document}</div>
   </div>
   <p className="workbench-announcement" role="status" aria-live="polite" aria-atomic="true">{view.announcement}</p>
  </section>;
