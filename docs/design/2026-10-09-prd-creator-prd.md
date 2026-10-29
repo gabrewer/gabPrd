@@ -285,6 +285,24 @@ Continue other planning without reopening this discussion now. The approved save
 - This is not a parity or migration project, so a source-delta audit is not currently applicable.
 - Before implementation planning, refine this same document with the code/test inventory, official Pi integration evidence, completed Contract Impact Check, and proportional distributed-workflow assessment. Do not convert these unanswered design choices into implementation discovery tasks or claim them resolved.
 
+### Core beta delivery scope — approved reduction
+
+The writer explicitly approved a reduced first delivery for users: repository selection → isolated-workspace configured brainstorm → generated PRD → revision requests through the same conversation → persisted draft and conversation → reopen. The document is read-only in this beta; Pi writes and revisions are verified from disk. There is no manual editor or manual Save/Ctrl+S promise in this release.
+
+Manual source editing, editor undo/redo and dirty-buffer recovery UI (P10), and further visual polish are deferred, not completed or removed from the longer-term product. Backend save/recovery safety remains intact. The original full-milestone criteria below remain the later target; this beta must be described as a subset, not full sprint acceptance.
+
+This reduction does not waive data safety, real configured writer-owned brainstorm/reopen evidence, scoped review/commit gates, Windows runtime/accessibility evidence, or prerequisite/distribution checks. Automated scripted provider tests establish mechanics only. No automatic writer answers or product publication; no UI is shown to the writer without permission. Missing required evidence remains NOT CHECKED. Execution status and release disposition remain authoritative in issue #13.
+
+### Approved idea-derived branch names
+
+For newly created PRDs, the writer approved `prd/<idea-slug>-<first8-of-prdUUID>` instead of UUID-only names. Derive the slug once from the initial idea, not the later title: NFKD-normalize, strip combining marks, lowercase ASCII letters/digits, replace other runs with hyphens, trim edge hyphens, take at most 48 characters and trim trailing hyphens; fallback to `idea` when empty. Reject collisions without overwriting or renaming anything.
+
+Persist the exact branch association through retries, reopen and title changes. Existing branches, worktrees and documents remain untouched; there is no migration or automatic rename. This approved change supersedes the older UUID-only creation rule below and does not change filenames, worktree paths or publication approval.
+
+### Approved active PRD location display
+
+After branch/worktree creation, show the active PRD worktree folder and its persisted branch visibly instead of presenting the selected source checkout as its working location. Keep that location visible through folder confirmation, brainstorm, draft review and reopen, including legacy branches. Before creation or when setup cannot establish a workspace, show preparation/unavailability rather than a misleading source location. The selected/default repository remains the separate starting point for new PRDs; this display change does not move documents, rename branches or publish anything.
+
 ## 10. Milestones
 
 1. **Workspace and conversation:** remembered repository selection, isolated PRD branch/worktree creation, and interactive Pi brainstorming.

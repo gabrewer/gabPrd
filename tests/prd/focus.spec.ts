@@ -1,0 +1,16 @@
+import {test,expect} from '@playwright/test';
+import {buildRendererHarness} from '../../scripts/prd-renderer-harness.mjs';
+import {fixture,launch,hash} from './fixtures';
+import type {RendererHarness} from './fixtures';
+test('@focus interview first, verified PRD takes prominence once, mounted reply/focus survives and narrow views remain operable',async()=>{
+ const harness=await buildRendererHarness('tests/prd/focus-entry.tsx') as unknown as RendererHarness;const f=await fixture(),app=await launch(f.root,harness.executable);
+ try{const page=await app.firstWindow();await page.setViewportSize({width:1440,height:1000});await expect(page.getByRole('heading',{name:'PRD Creator layout boundary'})).toBeVisible();const desk=page.getByRole('region',{name:'PRD workbench'}),chat=page.getByRole('region',{name:'Brainstorm conversation'}),doc=page.getByRole('region',{name:'PRD content'}),reply=page.getByLabel('Reply to Pi');
+  await expect(desk).toHaveAttribute('data-primary','conversation');await expect(doc).toBeHidden();expect((await chat.boundingBox())!.width).toBeGreaterThan((await desk.boundingBox())!.width*.85);
+  await reply.fill('Keep the interview focused on PRD creation.');await reply.focus();await reply.evaluate(el=>{Reflect.set(window,'ownedReplyNode',el);});await page.evaluate(()=>document.getElementById('verified')!.click());
+  await expect(desk).toHaveAttribute('data-primary','document');await expect(doc).toBeVisible();await expect(doc.getByRole('heading',{name:'PRD Creator',level:1,exact:true})).toBeVisible();await expect(doc.locator('img,a,script,iframe')).toHaveCount(0);expect(await page.evaluate(()=>Reflect.get(window,'ownedUnsafeMarkup'))).toBeUndefined();expect((await doc.boundingBox())!.width).toBeGreaterThan((await chat.boundingBox())!.width*1.5);await expect(reply).toBeFocused();await expect(reply).toHaveValue('Keep the interview focused on PRD creation.');expect(await reply.evaluate(el=>Reflect.get(window,'ownedReplyNode')===el)).toBe(true);
+  await page.getByRole('button',{name:'Focus conversation',exact:true}).click();await expect(desk).toHaveAttribute('data-primary','conversation');await page.getByRole('button',{name:'Next revision',exact:true}).click();await expect(desk).toHaveAttribute('data-primary','conversation');
+  await page.getByRole('button',{name:'Document unavailable',exact:true}).click();await expect(page.getByRole('alert')).toHaveText('Document verification needs attention.');await expect(reply).toHaveValue('Keep the interview focused on PRD creation.');
+  await page.getByRole('button',{name:'Provide verified read',exact:true}).click();await expect(desk).toHaveAttribute('data-primary','conversation');await page.setViewportSize({width:700,height:800});await page.getByRole('button',{name:'Focus PRD',exact:true}).click();await expect(doc).toBeVisible();await expect(chat).toBeHidden();await page.getByRole('button',{name:'Focus conversation',exact:true}).click();await expect(chat).toBeVisible();await expect(reply).toHaveValue('Keep the interview focused on PRD creation.');expect(await reply.evaluate(el=>Reflect.get(window,'ownedReplyNode')===el)).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  expect(await hash(harness.originalArchive)).toBe(harness.originalArchiveSha256);
+ }finally{await app.close();}
+});

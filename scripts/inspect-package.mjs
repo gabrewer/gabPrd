@@ -3,7 +3,8 @@ import { fileURLToPath } from 'node:url';
 import { readFileSync, existsSync, lstatSync, realpathSync, readdirSync } from 'node:fs';
 import { listPackage, statFile, extractFile } from '@electron/asar';
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const packageRoot = path.join(root, 'out/gabPrd-win32-x64');
+// An explicit built folder permits verification without overwriting a running build.
+const packageRoot = process.argv[2] ? path.resolve(process.argv[2]) : path.join(root, 'out/gabPrd-win32-x64');
 const archive = path.join(packageRoot, 'resources/app.asar');
 const unpacked = archive + '.unpacked';
 function assert(condition) { if (!condition) throw new Error('Packaged bootstrap asset/production-closure or exclusion check failed.'); }
@@ -32,6 +33,13 @@ try {
   const set = new Set(files);
   const read = file => { assert(set.has(file)); const bytes = extractFile(archive, path.normalize(file)); assert(bytes.length > 0); return bytes; };
   const json = file => JSON.parse(read(file).toString('utf8'));
+  // Independently enumerate the exact OpenAI7.19 executable-code exception, not session data.
+  const openAiPrefix='node_modules/openai/resources/beta/agents/sessions';
+  const openAiStems=['artifacts','events','index','items','sessions','subagents','turns','subagents/index','subagents/items','subagents/subagents','subagents/turns','subagents/turns/index','subagents/turns/items','subagents/turns/turns'];
+  const openAiFiles=openAiStems.flatMap(stem=>['js','mjs'].map(extension=>openAiPrefix+'/'+stem+'.'+extension));
+  const openAiAllowed=new Set([openAiPrefix,openAiPrefix+'/subagents',openAiPrefix+'/subagents/turns',...openAiFiles]);
+  assert(json('node_modules/openai/package.json').version==='7.19.0');
+  for(const file of openAiFiles)assert(read(file).equals(readFileSync(path.join(root,file))));
   const ownAssets = new Set(['.webpack', '.webpack/main', '.webpack/main/index.cjs', '.webpack/main/pi-utility.cjs',
     '.webpack/renderer', '.webpack/renderer/main_window', '.webpack/renderer/main_window/preload.cjs',
     '.webpack/renderer/main_window/index.html', '.webpack/renderer/main_window/index.js', '.webpack/renderer/main_window/shell.css']);
@@ -39,7 +47,8 @@ try {
     assert(['package.json', 'package-lock.json', 'node_modules'].includes(file) || ownAssets.has(file) || file.startsWith('node_modules/'));
     assert(!/\.map$/i.test(file));
     assert(!file.split('/').some(part => ['..', '.git', '.pi', '.agents', '.bin', 'node_gyp_bins'].includes(part)));
-    assert(!/(^|\/)(\.env(?:\.[^/]*)?|auth\.json|credentials(?:\.json)?|sessions)(\/|$)/i.test(file));
+    assert(!/(^|\/)(\.env(?:\.[^/]*)?|auth\.json|credentials(?:\.json)?)(\/|$)/i.test(file));
+    assert(!/(^|\/)sessions(\/|$)/i.test(file) || openAiAllowed.has(file));
     const stat = statFile(archive, path.normalize(file), false);
     if ('link' in stat) {
       const target = path.posix.normalize(stat.link);

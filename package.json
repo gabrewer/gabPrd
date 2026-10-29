@@ -11,7 +11,11 @@
     "package": "electron-forge package --platform win32 --arch x64",
     "inspect:package": "node scripts/inspect-package.mjs",
     "test:runtime": "playwright test --config playwright.config.ts",
-    "verify:bootstrap": "node scripts/bootstrap-verify.mjs"
+    "verify:bootstrap": "node scripts/bootstrap-verify.mjs",
+    "test:prd:unit": "node scripts/prd-test.mjs unit",
+    "test:prd:integration": "node scripts/prd-native.mjs",
+    "test:prd:runtime": "node scripts/prd-test.mjs runtime",
+    "verify:prd": "node scripts/prd-verify.mjs"
   },
   "type": "module",
   "productName": "PRD Creator",
@@ -25,10 +29,18 @@
   },
   "packageManager": "npm@11.6.2",
   "dependencies": {
+    "@codemirror/commands": "6.11.1",
+    "@codemirror/lang-markdown": "6.5.2",
+    "@codemirror/language": "6.13.1",
+    "@codemirror/state": "6.7.6",
+    "@codemirror/view": "6.43.14",
     "@earendil-works/pi-coding-agent": "1.1.0",
+    "@types/react": "19.3.0",
     "better-sqlite3": "13.0.3",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "react-markdown": "10.1.0",
+    "remark-gfm": "4.0.1"
   },
   "devDependencies": {
     "@electron-forge/cli": "8.0.1",
@@ -38,10 +50,10 @@
     "@playwright/test": "1.64.0",
     "@types/better-sqlite3": "9.6.0",
     "@types/node": "24.19.2",
-    "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "axe-core": "4.13.0",
     "electron": "44.7.0",
+    "minimizer-webpack-plugin": "5.13.0",
     "ts-loader": "9.6.2",
     "tsx": "4.23.15",
     "typescript": "6.0.3",

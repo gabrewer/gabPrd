@@ -14,6 +14,7 @@ import { registerBootstrapIpc } from './ipc';
 import { startPiUtility } from './pi-utility';
 import { probeSqlite } from './sqlite-probe';
 import { createBootstrapWindow } from './window';
+import { startProduct } from './prd-startup';
 
 function report(code: 'FIXTURE_INVALID' | 'INTERNAL'): void {
   console.error(safeError(code).message);
@@ -105,7 +106,7 @@ function bootstrap(): void {
     if (stopping) return;
     try {
       installAssetProtocol(session.defaultSession, app.getAppPath());
-      ownedWindow = createBootstrapWindow();
+      ownedWindow = createBootstrapWindow(process.argv.some(argument => argument.startsWith('--bootstrap-fixture-root=')));
       disposeIpc = registerBootstrapIpc(ownedWindow, controller);
       await ownedWindow.loadURL(SHELL_URL);
     } catch {
@@ -135,4 +136,5 @@ function bootstrap(): void {
   });
 }
 
-bootstrap();
+if(process.argv.some(argument=>argument==='--bootstrap-fixture-root'||argument.startsWith('--bootstrap-fixture-root=')))bootstrap();
+else startProduct();

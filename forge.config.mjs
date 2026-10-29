@@ -21,11 +21,17 @@ function screenTree(directory, boundary) {
     } else if (stat.isDirectory()) screenTree(file, boundary);
   }
 }
+// Pinned dependency source code, NOT saved Pi sessions. Closed filenames; data remains excluded.
+const openAiSessionPrefix = 'node_modules/openai/resources/beta/agents/sessions';
+const openAiSessionStems = ['artifacts','events','index','items','sessions','subagents','turns','subagents/index','subagents/items','subagents/subagents','subagents/turns','subagents/turns/index','subagents/turns/items','subagents/turns/turns'];
+const openAiSessionCode = new Set([openAiSessionPrefix, openAiSessionPrefix+'/subagents', openAiSessionPrefix+'/subagents/turns', ...openAiSessionStems.flatMap(stem=>['js','mjs'].map(extension=>openAiSessionPrefix+'/'+stem+'.'+extension))]);
+const pinnedOpenAi = JSON.parse(readFileSync(path.join(root,'node_modules/openai/package.json'),'utf8')).version === '7.19.0';
 export function packageIgnore(file) {
   const name = file.replaceAll('\\', '/').replace(/^\/+/, '');
   if (!name) return false;
   if (name.split('/').some(part => ['..', '.git', '.pi', '.agents', '.bin', 'node_gyp_bins'].includes(part))) return true;
-  if (/\.map$/i.test(name) || /(^|\/)(\.env(?:\.[^/]*)?|auth\.json|credentials(?:\.json)?|sessions)(\/|$)/i.test(name)) return true;
+  if (/\.map$/i.test(name) || /(^|\/)(\.env(?:\.[^/]*)?|auth\.json|credentials(?:\.json)?)(\/|$)/i.test(name)) return true;
+  if (/(^|\/)sessions(\/|$)/i.test(name) && !(pinnedOpenAi && openAiSessionCode.has(name))) return true;
   const allowed = ['package.json', 'package-lock.json'].includes(name)
     || name === '.webpack' || name.startsWith('.webpack/')
     || name === 'node_modules' || name.startsWith('node_modules/');

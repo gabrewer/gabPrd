@@ -5,6 +5,7 @@ import path from 'node:path';
 import { SDK_VERSION } from '../shared/bootstrap-contracts';
 import type { UtilityErrorCode, UtilityResult } from '../shared/bootstrap-contracts';
 import { parseUtilityInit } from '../shared/bootstrap-validation';
+import {PrdSession} from './prd-session';
 
 const appRoot = path.resolve(__dirname, '../..');
 const modules = path.join(appRoot, 'node_modules');
@@ -78,7 +79,19 @@ const port = process.parentPort;
 if (process.type === 'utility' && port) {
   // Keep the owned child visible after the completed handshake until main kills its handle.
   setInterval(() => {}, 1000);
-  port.once('message', (event: { data: unknown }) => {
+  if(process.argv.includes('--prd-utility')){
+    // Only the main-owned product fork supplies this switch; fixture probes never discover resources.
+    let closingSequence:number|undefined,closingSucceeded=false;
+    const runtime=new PrdSession({packagedEntry:path.join(appRoot,'.webpack/main/pi-utility.cjs') as import('../shared/prd-contracts').CanonicalPath,packagedSdkRoot:sdkRoot as import('../shared/prd-contracts').CanonicalPath},event=>{
+      try{port.postMessage(event);}catch{process.exit(1);}
+      if(event.type==='pi.closing'){closingSequence=event.sequence;closingSucceeded=event.abortAwaited;}
+    });
+    port.on('message',(event:{data:unknown})=>{void runtime.accept(event.data).then(result=>{
+      // Keep the channel alive until main receives the terminal event. Immediate exit can drop it.
+      const command=event.data as Partial<import('../shared/prd-contracts').PiUtilityCommand>|null;
+      if(result.ok&&closingSequence!==undefined&&command?.type==='pi.ack'&&command.throughSequence!==undefined&&command.throughSequence>=closingSequence)process.exit(closingSucceeded?0:1);
+    });});
+  }else port.once('message', (event: { data: unknown }) => {
     const init = parseUtilityInit(event.data);
     if (!init) return;
     void probe(init.runId).then(result => {

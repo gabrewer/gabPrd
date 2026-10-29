@@ -1,0 +1,8 @@
+/** Presentation-only fixture: no fake Pi/service, no application data. */
+import {useState} from 'react';
+import {createRoot} from 'react-dom/client';
+import PrdWorkbench from '../../src/renderer/PrdWorkbench';
+import PrdDraftView from '../../src/renderer/PrdDraftView';
+function Writer(){const[text,setText]=useState('');return <section aria-label="Brainstorm conversation"><h2>Conversation</h2><label htmlFor="writer-reply">Reply to Pi</label><textarea id="writer-reply" value={text} onChange={e=>setText(e.target.value)}/></section>;}
+function Fixture(){const[verified,setVerified]=useState(false),[attention,setAttention]=useState(false),[revision,setRevision]=useState(0);return <main className="prd-workspace focus-fixture"><h1>PRD Creator layout boundary</h1><div><button id="verified" onClick={()=>{setVerified(true);setAttention(false);}}>Provide verified read</button><button onClick={()=>setRevision(n=>n+1)}>Next revision</button><button onClick={()=>{setVerified(false);setAttention(true);}}>Document unavailable</button></div><PrdWorkbench hasVerifiedDraft={verified} documentNeedsAttention={attention} conversation={<Writer/>} document={<section aria-label="PRD content"><h2>PRD Creator</h2>{attention?<p role="alert">Document verification needs attention.</p>:<PrdDraftView text={'# PRD Creator\n\nKeep repository mechanics out of the writing experience. Revision '+revision+'.\n\n[Link](https://example.invalid)\n\n![Remote media](https://example.invalid/image.png)\n\n<script>window.ownedUnsafeMarkup=true</script>'}/>}</section>}/></main>;}
+const root=document.getElementById('root');if(!root)throw new Error('Owned layout mount unavailable');createRoot(root).render(<Fixture/>);
